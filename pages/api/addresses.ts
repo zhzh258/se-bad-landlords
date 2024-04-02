@@ -12,7 +12,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       where: {
         FULL_ADDRESS: { contains: searchAddress, mode: 'insensitive' }, // this allows slower case values
       },
-      take: 10,
+     take: 10,
     });
 
     res.status(200).json(addresses);

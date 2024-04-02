@@ -17,6 +17,7 @@ function DetailPage() {
     const router = useRouter();
     const [addressObj, setAddressObj] = useState<IAddress | null>(null);
     const [violations, setViolations] = useState<IViolation[]>([]);
+    const [units, setUnits] = useState<IAddress[]>([]); 
     const [expandTableVisible_st, setexpandTableVisible_st] = useState(false);
     const [expandTableVisible_la, setexpandTableVisible_la] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null); 
@@ -49,6 +50,11 @@ function DetailPage() {
                 setAddressObj(JSON.parse(decodedAddress));
                 // fetch violations
                 fetchViolations(JSON.parse(decodedAddress).SAM_ADDRESS_ID);
+
+                // Add '#' to the address before fetching associated units
+                const generalAddress = JSON.parse(decodedAddress).FULL_ADDRESS;
+                const addressWithHash = generalAddress + ' #';
+                fetchAssociatedUnits(addressWithHash);
             } catch (error) {
                 console.error("Error parsing address:", error);
                 setAddressObj(null);
@@ -67,6 +73,21 @@ function DetailPage() {
             console.log("data:" + data);
         } catch (error) {
             setViolations([]);
+            console.error(error);
+        }
+    };
+
+    const fetchAssociatedUnits = async (generalAddress: string) => {
+        try {
+            const res = await fetch(`/api/addresses?search=${generalAddress}`);
+            if (res.ok) {
+                const unitsData = await res.json();
+                setUnits(unitsData);
+            } else {
+                throw new Error('Network response was not ok.');
+            }
+        } catch (error) {
+            setUnits([]);
             console.error(error);
         }
     };
@@ -103,21 +124,29 @@ function DetailPage() {
                     </div>
                     {addressSuggestions.length > 0 && (
                         <ul ref={suggestionsRef} className="z-20 absolute mt-1 w-5/6 bg-white border border-gray-300 z-10">
-                            {addressSuggestions.map((address, index) => (
-                                <li 
-                                    key={index} 
-                                    onClick={() => {
-                                        setSearchAddress(`${address.FULL_ADDRESS}, ${address.MAILING_NEIGHBORHOOD}, ${address.ZIP_CODE}`);
-                                        setAddressSuggestions([]);
-                                        handleAddressSelection(address);
-                                    }}
-                                    className="p-2 hover:bg-gray-100 cursor-pointer"
-                                >
-                                    {address.FULL_ADDRESS}, {address.MAILING_NEIGHBORHOOD}, {address.ZIP_CODE}
-                                </li>
-                            ))}
+                            {addressSuggestions.map((address, index) => {
+                                // Extract general address by removing everything after '#' symbol (if exists)
+                                const generalAddress = address.FULL_ADDRESS.split(' #')[0];
+                    
+                                return (
+                                    <li 
+                                        key={index} 
+                                        onClick={() => {
+                                            // Set search address as general address
+                                            setSearchAddress(`${generalAddress}, ${address.MAILING_NEIGHBORHOOD}, ${address.ZIP_CODE}`);
+                                            setAddressSuggestions([]);
+                                            // Handle the general address selection
+                                            handleAddressSelection({ ...address, FULL_ADDRESS: generalAddress });
+                                        }}
+                                        className="p-2 hover:bg-gray-100 cursor-pointer"
+                                    >
+                                        {address.FULL_ADDRESS}, {address.MAILING_NEIGHBORHOOD}, {address.ZIP_CODE}
+                                    </li>
+                                );
+                            })}
                         </ul>
                     )}
+                    
                 </div>
             </div>
             <div className="flex flex-col items-start justify-center h-full w-full">
@@ -155,6 +184,9 @@ function DetailPage() {
                             <th className="px-2 py-3 border-b-2 border-gray-200 bg-white text-center font-bold text-gray-600 uppercase tracking-wider">
                                 NOTES
                             </th>
+                            <th className="px-2 py-3 border-b-2 border-gray-200 bg-white text-center font-bold text-gray-600 uppercase tracking-wider">
+                                SAM ID
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -173,6 +205,9 @@ function DetailPage() {
                             </td>
                             <td className="px-2 py-3 border-b border-gray-200 bg-white">
                                 <p className="text-gray-900 whitespace-no-wrap">{violations.length > 0 ? violations[0].status : ""}</p>
+                            </td>
+                            <td className="px-2 py-3 border-b border-gray-200 bg-white">
+                                <p className="text-gray-900 whitespace-no-wrap">{violations.length > 0 ? violations[0].sam_id : ""}</p>
                             </td>
                         </tr>
                     </tbody>
@@ -197,6 +232,93 @@ function DetailPage() {
                                         </td>
                                         <td className="px-2 py-3 border-b border-gray-200 bg-white">
                                             <p className="text-gray-900 whitespace-no-wrap">{violation.status}</p>
+                                        </td>
+                                        <td className="px-2 py-3 border-b border-gray-200 bg-white">
+                                            <p className="text-gray-900 whitespace-no-wrap">{violation.sam_id}</p>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        //  {/* </table> */}
+                    // </div>
+                )}
+                </table>
+            </div>
+
+            {/* Assosiate units table */}
+            <div className="max-w-full overflow-x-auto">
+                <div className="text-lg text-white font-semibold py-2 px-4 bg-[#c8a992]">
+                    Associated Units
+                </div>
+                <table className="min-w-full leading-normal text-center">
+                    <thead>
+                        <tr>
+                            <th className="px-2 py-3 border-b-2 border-gray-200 bg-white text-center font-bold text-gray-600 uppercase tracking-wider">
+                                 
+                            </th>
+                            <th className="px-2 py-3 border-b-2 border-gray-200 bg-white text-center font-bold text-gray-600 uppercase tracking-wider">
+                                SAM ID
+                            </th>
+                            <th className="px-2 py-3 border-b-2 border-gray-200 bg-white text-center font-bold text-gray-600 uppercase tracking-wider">
+                                FULL ADDRESS
+                            </th>
+                            <th className="px-2 py-3 border-b-2 border-gray-200 bg-white text-center font-bold text-gray-600 uppercase tracking-wider">
+                                MAILING NEIGHBORHOOD
+                            </th>
+                            <th className="px-2 py-3 border-b-2 border-gray-200 bg-white text-center font-bold text-gray-600 uppercase tracking-wider">
+                                ZIP CODE
+                            </th>
+                            <th className="px-2 py-3 border-b-2 border-gray-200 bg-white text-center font-bold text-gray-600 uppercase tracking-wider">
+                                PARCEL
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td className="px-2 py-3 border-b border-gray-200 bg-white text-3xl text-right">
+                                <button onClick={toggleTableVisibility_st} className={`font-bold ${expandTableVisible_st ? 'transform rotate-90' : ''}`}>{"›"}</button>
+                            </td>
+                            <td className="px-2 py-3 border-b border-gray-200 bg-white">
+                                <p className="text-gray-900 whitespace-no-wrap">{units.length>0?units[0].SAM_ADDRESS_ID:""}</p>
+                            </td>
+                            <td className="px-2 py-3 border-b border-gray-200 bg-white">
+                                <p className="text-gray-900 whitespace-no-wrap">{units.length>0 ? units[0].FULL_ADDRESS : ""}</p>
+                            </td>
+                            <td className="px-2 py-3 border-b border-gray-200 bg-white">
+                                <p className="text-gray-900 whitespace-no-wrap">{units.length>0 ? units[0].MAILING_NEIGHBORHOOD : ""}</p>
+                            </td>
+                            <td className="px-2 py-3 border-b border-gray-200 bg-white">
+                                <p className="text-gray-900 whitespace-no-wrap">{units.length>0 ? units[0].ZIP_CODE : ""}</p>
+                            </td>
+                            <td className="px-2 py-3 border-b border-gray-200 bg-white">
+                                <p className="text-gray-900 whitespace-no-wrap">{units.length>0 ? units[0].PARCEL : ""}</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                    {expandTableVisible_st && units.length > 1 && (
+                    // <div className="absolute left-0 w-full">
+                        //  {/* <table className="min-w-full leading-normal text-center"> */}
+                            <tbody ref={expandTableRef} >
+                                {units.slice(1).map((unit, index) => (
+                                    <tr
+                                        key={index}>
+                                        <td className="px-2 py-3 border-b border-gray-200 bg-white">
+                                            <button className="font-bold"></button>
+                                        </td>
+                                        <td className="px-2 py-3 border-b border-gray-200 bg-white">
+                                            <p className="text-gray-900 whitespace-no-wrap">{unit.SAM_ADDRESS_ID}</p>
+                                        </td>
+                                        <td className="px-2 py-3 border-b border-gray-200 bg-white">
+                                            <p className="text-gray-900 whitespace-no-wrap">{unit.FULL_ADDRESS}</p>
+                                        </td>
+                                        <td className="px-2 py-3 border-b border-gray-200 bg-white">
+                                            <p className="text-gray-900 whitespace-no-wrap">{unit.MAILING_NEIGHBORHOOD}</p>
+                                        </td>
+                                        <td className="px-2 py-3 border-b border-gray-200 bg-white">
+                                            <p className="text-gray-900 whitespace-no-wrap">{unit.ZIP_CODE}</p>
+                                        </td>
+                                        <td className="px-2 py-3 border-b border-gray-200 bg-white">
+                                            <p className="text-gray-900 whitespace-no-wrap">{unit.PARCEL}</p>
                                         </td>
                                     </tr>
                                 ))}
@@ -228,9 +350,9 @@ function DetailPage() {
 
                 {/* Right side component */}
                 <div className="flex-1 max-w-md p-4 rounded">
-                    <h2 className="text-2xl font-bold text-orange-600">SCOFFLAW LANDLORD</h2>
+                    <h2 className="text-2xl font-bold text-orange-600">DISCLAIMER</h2>
                     <p>
-                    The text here is to help explain the specific criteria the landlord has done to appear on this scofflaw list Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                    We can’t be sure that the unit numbers are included in the violation, or that this is the same landlord. At this time we cannot determine which owner owns which address.
                     </p>
                 </div>
             </div>
@@ -259,6 +381,9 @@ function DetailPage() {
                             <th className="px-2 py-3 border-b-2 border-gray-200 bg-white text-center font-bold text-gray-600 uppercase tracking-wider">
                                 NOTES
                             </th>
+                            <th className="px-2 py-3 border-b-2 border-gray-200 bg-white text-center font-bold text-gray-600 uppercase tracking-wider">
+                                SAM ID
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -277,6 +402,9 @@ function DetailPage() {
                             </td>
                             <td className="px-2 py-3 border-b border-gray-200 bg-white">
                                 <p className="text-gray-900 whitespace-no-wrap">{violations.length > 0 ? violations[0].status : ""}</p>
+                            </td>
+                            <td className="px-2 py-3 border-b border-gray-200 bg-white">
+                                <p className="text-gray-900 whitespace-no-wrap">{violations.length > 0 ? violations[0].sam_id : ""}</p>
                             </td>
                         </tr>
                     </tbody>
@@ -301,6 +429,9 @@ function DetailPage() {
                                         </td>
                                         <td className="px-2 py-3 border-b border-gray-200 bg-white">
                                             <p className="text-gray-900 whitespace-no-wrap">{violation.status}</p>
+                                        </td>
+                                        <td className="px-2 py-3 border-b border-gray-200 bg-white">
+                                            <p className="text-gray-900 whitespace-no-wrap">{violation.sam_id}</p>
                                         </td>
                                     </tr>
                                 ))}
