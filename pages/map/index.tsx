@@ -45,7 +45,7 @@ const Map: React.FC<IMapProps> = () => {
         fetchData()
     }, [])
 
-   
+
     useEffect(() => {
         // define the handler
         const handleClickOutside = (event: MouseEvent) => {
@@ -67,8 +67,8 @@ const Map: React.FC<IMapProps> = () => {
         };
     }, []);
 
-    
-    
+
+
     const handleAddressSelection = async (address: IAddress) => {
         // setSelectedAddress(address);
         const addressString = JSON.stringify(address);
@@ -90,7 +90,7 @@ const Map: React.FC<IMapProps> = () => {
              */
 
             // console.log('Clicked address:', address);
-            
+
             /* This is OpenStreetMap Implementation
                Issue with this was showing very wrong coords some property.
                Probably due to having unit numbers.
@@ -98,11 +98,11 @@ const Map: React.FC<IMapProps> = () => {
             const fullAddress = `${address.FULL_ADDRESS}, ${address.MAILING_NEIGHBORHOOD}, ${address.ZIP_CODE}`;
             const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${fullAddress}`);
             const data = await response.json();
-            
+
             if (data.length > 0) {
                 const latitude = parseFloat(data[0].lat);
                 const longitude = parseFloat(data[0].lon);
-    
+
                 if (!isNaN(latitude) && !isNaN(longitude)) {
                     setSelectedCoords({
                         latitude: latitude,
@@ -129,14 +129,14 @@ const Map: React.FC<IMapProps> = () => {
                 console.error('Failed to fetch landlords:', res.statusText);
                 setLandlords(null)
             }
-            
+
         } catch (err) {
             console.error(err);
             setLandlords(null);
             return
         }
     }
-    
+
     return (
         <>
             {/* image title */}
@@ -144,8 +144,8 @@ const Map: React.FC<IMapProps> = () => {
                 <div className="px-10 flex flex-col items-start justify-center bg-[#021C6666] h-full w-full">
                     <div className="text-white font-bold text-2xl mb-5">SCOFFLAW OWNERS BOSTON</div>
                     <div className="text-white font-['Lora'] text-sm">
-                        Discover the Truth about Boston’s Bad Landlords <br/>
-                        Our Website Exposes Property Violations and Brings Transparency to Code Enforcement, <br/>
+                        Discover the Truth about Boston’s Bad Landlords <br />
+                        Our Website Exposes Property Violations and Brings Transparency to Code Enforcement, <br />
                         Empowering Tenants and Advocating for a Fair Housing System
                     </div>
                 </div>
@@ -154,13 +154,13 @@ const Map: React.FC<IMapProps> = () => {
                 <div className="h-10 bg-white w-5/6 rounded">
                     <div className="flex items-center">
                         <img src="/search-icon.svg" alt="saerch-icon" className="inline mx-2" />
-                        <input 
+                        <input
                             ref={inputRef}
-                            type="text" 
-                            value={searchAddress} 
+                            type="text"
+                            value={searchAddress}
                             onClick={handleSearchClick}
-                            onChange={handleSearchUpdate} 
-                            placeholder="Search for an address" 
+                            onChange={handleSearchUpdate}
+                            placeholder="Search for an address"
                             className="w-full py-2 px-1 rounded focus:outline-none placeholder:text-[#58585B]"
                             onKeyDown={(e) => e.key === 'Enter' && handleSearchClick()}
                         />
@@ -168,21 +168,29 @@ const Map: React.FC<IMapProps> = () => {
                     </div>
                     {addressSuggestions.length > 0 && (
                         <ul ref={suggestionsRef} className="z-20 absolute mt-1 w-5/6 bg-white border border-gray-300 z-10">
-                            {addressSuggestions.map((address, index) => (
-                                <li 
-                                    key={index} 
-                                    onClick={() => {
-                                        setSearchAddress(`${address.FULL_ADDRESS}, ${address.MAILING_NEIGHBORHOOD}, ${address.ZIP_CODE}`);
-                                        setAddressSuggestions([]);
-                                        handleAddressSelection(address);
-                                    }}
-                                    className="p-2 hover:bg-gray-100 cursor-pointer"
-                                >
-                                    {address.FULL_ADDRESS}, {address.MAILING_NEIGHBORHOOD}, {address.ZIP_CODE}
-                                </li>
-                            ))}
+                            {addressSuggestions.map((address, index) => {
+                                // Extract general address by removing everything after '#' symbol (if exists)
+                                const generalAddress = address.FULL_ADDRESS.split(' #')[0];
+
+                                return (
+                                    <li
+                                        key={index}
+                                        onClick={() => {
+                                            // Set search address as general address
+                                            setSearchAddress(`${generalAddress}, ${address.MAILING_NEIGHBORHOOD}, ${address.ZIP_CODE}`);
+                                            setAddressSuggestions([]);
+                                            // Handle the general address selection
+                                            handleAddressSelection({ ...address, FULL_ADDRESS: generalAddress });
+                                        }}
+                                        className="p-2 hover:bg-gray-100 cursor-pointer"
+                                    >
+                                        {address.FULL_ADDRESS}, {address.MAILING_NEIGHBORHOOD}, {address.ZIP_CODE}
+                                    </li>
+                                );
+                            })}
                         </ul>
                     )}
+
                 </div>
             </div>
 
@@ -191,7 +199,7 @@ const Map: React.FC<IMapProps> = () => {
                 <div className='font-bold text-[#58585B] my-7 text-xl'>
                     FIND PROPERTIES WITH VIOLATIONS BY AREA
                 </div>
-                <NewMap selectedCoords={selectedCoords} isCoordsSet={isCoordsSet} setIsCoordsSet={setIsCoordsSet} setSelectedCoords={setSelectedCoords}/>
+                <NewMap selectedCoords={selectedCoords} isCoordsSet={isCoordsSet} setIsCoordsSet={setIsCoordsSet} setSelectedCoords={setSelectedCoords} />
 
                 {/*this shows top 10 landlords using getStaticProps*/}
                 <div className='font-bold text-[#58585B] mt-12 mb-10 text-xl'>
@@ -199,20 +207,20 @@ const Map: React.FC<IMapProps> = () => {
                 </div>
                 <div className="grid grid-cols-1 mb-20 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-x-9 gap-y-16">
                     {landlords === null ?
-                    "Loading..."
-                    :
-                    landlords.map((landlord, index) => (
-                        <div className="grid-item bg-white p-4 rounded-lg border-[0.5px] border-[#58585B]" key={index}>
-                            <div>
-                                <div className="font-['Lora'] text-sm mb-4">Property Type</div>
-                                <span className="block font-bold text-lg text-[#58585B]">{landlord.FULL_ADDRESS},</span>
-                                <span className="block font-bold text-lg text-[#58585B]">{landlord.CITY} MA</span>
+                        "Loading..."
+                        :
+                        landlords.map((landlord, index) => (
+                            <div className="grid-item bg-white p-4 rounded-lg border-[0.5px] border-[#58585B]" key={index}>
+                                <div>
+                                    <div className="font-['Lora'] text-sm mb-4">Property Type</div>
+                                    <span className="block font-bold text-lg text-[#58585B]">{landlord.FULL_ADDRESS},</span>
+                                    <span className="block font-bold text-lg text-[#58585B]">{landlord.CITY} MA</span>
+                                </div>
+                                <div className="flex justify-end">
+                                    <img src="/property-arrow.svg" alt="property-arrow" className="mt-5" />
+                                </div>
                             </div>
-                            <div className="flex justify-end">
-                                <img src="/property-arrow.svg" alt="property-arrow" className="mt-5" />
-                            </div>
-                        </div>
-                    ))}
+                        ))}
                 </div>
             </div>
         </>
@@ -231,7 +239,7 @@ const base_url = process.env.SITE_URL || 'http://localhost:3000';
 //             const landlords: ILandlord[] = await res.json();
 //             return { props: { landlords } };
 //         }
-        
+
 //         console.error('Failed to fetch landlords:', res.statusText);
 //         return { props: { landlords: [] } };
 //     } catch (err) {
