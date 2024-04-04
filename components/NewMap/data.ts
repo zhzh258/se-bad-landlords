@@ -39,7 +39,7 @@ export const neighborhoodsLayer: any = {
   'source-layer': 'census2020_bg_neighborhoods-5hyj9i',
   layout: {},
   paint: {
-    'fill-color': 'blue',
+    'fill-color': '#add8e6',
     'fill-opacity': [
       'case',
       ['boolean', ['feature-state', 'hover'], false],

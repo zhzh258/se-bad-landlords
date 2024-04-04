@@ -103,14 +103,14 @@ const NewMap = (
           }
         } else if(selectedFeature.layer.id === "clustered-violations" || selectedFeature.layer.id === "cluster-violations-count" ) { // a yellow cluster is clicked
           if (selectedFeature.properties.cluster_id !== null) {
-            alert(`cluster_id: ${selectedFeature.properties.cluster_id}`)
+            // alert(`cluster_id: ${selectedFeature.properties.cluster_id}`)
             const coordinates: ICoords = {
               longitude: selectedFeature.geometry.coordinates[0],
               latitude: selectedFeature.geometry.coordinates[1]
             }
             const vp: IViewport = {
               ...coordinates,
-              zoom: 14
+              zoom: 16
             }
             setViewport(vp);
           }
