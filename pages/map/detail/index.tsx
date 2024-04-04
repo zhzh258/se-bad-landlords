@@ -19,6 +19,7 @@ function DetailPage() {
     const [violations, setViolations] = useState<IViolation[]>([]);
     const [units, setUnits] = useState<IAddress[]>([]); 
     const [expandTableVisible_st, setexpandTableVisible_st] = useState(false);
+    const [expandTableVisible_un, setexpandTableVisible_un] = useState(false);
     const [expandTableVisible_la, setexpandTableVisible_la] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null); 
     const suggestionsRef = useRef<HTMLUListElement>(null);
@@ -98,6 +99,10 @@ function DetailPage() {
 
     const toggleTableVisibility_st = () => {
         setexpandTableVisible_st(!expandTableVisible_st);
+    };
+
+    const toggleTableVisibility_un = () => {
+        setexpandTableVisible_un(!expandTableVisible_un);
     };
 
     const toggleTableVisibility_la = () => {
@@ -245,6 +250,7 @@ function DetailPage() {
                 </table>
             </div>
 
+            <div className="h-11"></div>
             {/* Assosiate units table */}
             <div className="max-w-full overflow-x-auto">
                 <div className="text-lg text-white font-semibold py-2 px-4 bg-[#c8a992]">
@@ -276,7 +282,7 @@ function DetailPage() {
                     <tbody>
                         <tr>
                             <td className="px-2 py-3 border-b border-gray-200 bg-white text-3xl text-right">
-                                <button onClick={toggleTableVisibility_st} className={`font-bold ${expandTableVisible_st ? 'transform rotate-90' : ''}`}>{"›"}</button>
+                                <button onClick={toggleTableVisibility_un} className={`font-bold ${expandTableVisible_un ? 'transform rotate-90' : ''}`}>{"›"}</button>
                             </td>
                             <td className="px-2 py-3 border-b border-gray-200 bg-white">
                                 <p className="text-gray-900 whitespace-no-wrap">{units.length>0?units[0].SAM_ADDRESS_ID:""}</p>
@@ -295,7 +301,7 @@ function DetailPage() {
                             </td>
                         </tr>
                     </tbody>
-                    {expandTableVisible_st && units.length > 1 && (
+                    {expandTableVisible_un && units.length > 1 && (
                     // <div className="absolute left-0 w-full">
                         //  {/* <table className="min-w-full leading-normal text-center"> */}
                             <tbody ref={expandTableRef} >
@@ -337,7 +343,6 @@ function DetailPage() {
             <div className="h-11"></div>
 
             <div className="flex gap-20 justify-center items-center">
-                {/* Left side component */}
                 <div className="flex-1 max-w-md p-4 bg-white border rounded">
                     <p className="text-2xl font-bold">{" "}</p>
                     <h2 className="text-2xl font-bold">JA INVESTMENTS LLC</h2>
@@ -348,7 +353,6 @@ function DetailPage() {
                     <p className="text-2xl font-bold"></p>
                 </div>
 
-                {/* Right side component */}
                 <div className="flex-1 max-w-md p-4 rounded">
                     <h2 className="text-2xl font-bold text-orange-600">DISCLAIMER</h2>
                     <p>
@@ -358,8 +362,7 @@ function DetailPage() {
             </div>
             <div className="h-11"></div>
             
-            {/* landlord violations table */}
-            <div className="max-w-full overflow-x-auto">
+            {/* <div className="max-w-full overflow-x-auto">
                 <div className="text-lg text-white font-semibold py-2 px-4 bg-[#c8a992]">
                     LANDLORD VIOLATIONS
                 </div>
@@ -410,7 +413,7 @@ function DetailPage() {
                     </tbody>
                     {expandTableVisible_la && violations.length > 1 && (
                     // <div className="absolute left-0 w-full">
-                        //  {/* <table className="min-w-full leading-normal text-center"> */}
+                        //  <table className="min-w-full leading-normal text-center">
                             <tbody ref={expandTableRef} >
                                 {violations.slice(1).map((violation, index) => (
                                     <tr
@@ -436,12 +439,12 @@ function DetailPage() {
                                     </tr>
                                 ))}
                             </tbody>
-                        //  {/* </table> */}
+                        // </table>
                     // </div>
                 )}
                 </table>
             </div>
-            <div className="h-11"></div>
+            <div className="h-11"></div> */}
 
             {/* <h1>Detail Page</h1>
             <p>Full Address: {addressObj.FULL_ADDRESS}</p>
