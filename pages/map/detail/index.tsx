@@ -41,7 +41,14 @@ function DetailPage() {
 
     const handleAddressSelection = async (address: IAddress) => {
         // setSelectedAddress(address);
-        const addressString = JSON.stringify(address);
+        console.log(address.FULL_ADDRESS)
+        const res = (await fetch(`/api/address?search=${address.FULL_ADDRESS}`));
+        if (!res.ok) {
+            throw new Error('Network response was not ok.');
+        }
+        const generalAddress = await res.json();
+
+        const addressString = JSON.stringify(generalAddress[0]);
         const encodedAddress = encodeURIComponent(addressString);
         router.push(`/map/detail?address=${encodeURIComponent(encodedAddress)}`);
     };
@@ -139,6 +146,14 @@ function DetailPage() {
         setexpandTableVisible_la(!expandTableVisible_la);
     };
 
+    function violationColor(violation: IViolation) {
+        if (violation.code.includes('527') || violation.code.includes('780')) {
+            return 'text-red-500';
+        } else {
+            return 'text-gray-900'; 
+        }
+    }
+
     return (
         <div className="px-10 relative">
             <div className='h-20 flex justify-center items-center'>
@@ -211,7 +226,10 @@ function DetailPage() {
                                 SAM ID
                             </th>
                             <th className="px-2 py-3 border-b-2 border-gray-200 bg-white text-center font-bold text-gray-600 uppercase tracking-wider">
-                                CODE VIOLATIONS
+                                CODE VIOLATION
+                            </th>
+                            <th className="px-2 py-3 border-b-2 border-gray-200 bg-white text-center font-bold text-gray-600 uppercase tracking-wider">
+                                CASE NUMBER
                             </th>
                             <th className="px-2 py-3 border-b-2 border-gray-200 bg-white text-center font-bold text-gray-600 uppercase tracking-wider">
                                 DESCRIPTION
@@ -230,19 +248,22 @@ function DetailPage() {
                                 <button onClick={toggleTableVisibility_st} className={`font-bold ${expandTableVisible_st ? 'transform rotate-90' : ''}`}>{"›"}</button>
                             </td>
                             <td className="px-2 py-3 border-b border-gray-200 bg-white">
-                                <p className="text-gray-900 whitespace-no-wrap">{violations.length > 0 ? violations[0].sam_id : ""}</p>
+                                <p className={`${violations.length > 0? violationColor(violations[0]): "text-gray-900"} whitespace-no-wrap`}>{violations.length > 0 ? violations[0].sam_id : ""}</p>
                             </td>
                             <td className="px-2 py-3 border-b border-gray-200 bg-white">
-                                <p className="text-gray-900 whitespace-no-wrap">{violations.length > 0 ? violations[0].case_no : ""}</p>
+                                <p className={`${violations.length > 0? violationColor(violations[0]): "text-gray-900"} whitespace-no-wrap`}>{violations.length > 0 ? violations[0].code : ""}</p>
                             </td>
                             <td className="px-2 py-3 border-b border-gray-200 bg-white">
-                                <p className="text-gray-900 whitespace-no-wrap">{violations.length > 0 ? violations[0].description : ""}</p>
+                                <p className={`${violations.length > 0? violationColor(violations[0]): "text-gray-900"} whitespace-no-wrap`}>{violations.length > 0 ? violations[0].case_no : ""}</p>
                             </td>
                             <td className="px-2 py-3 border-b border-gray-200 bg-white">
-                                <p className="text-gray-900 whitespace-no-wrap">{violations.length > 0 ? violations[0].status_dttm.split(" ")[0] : ""}</p>
+                                <p className={`${violations.length > 0? violationColor(violations[0]): "text-gray-900"} whitespace-no-wrap`}>{violations.length > 0 ? violations[0].description : ""}</p>
                             </td>
                             <td className="px-2 py-3 border-b border-gray-200 bg-white">
-                                <p className="text-gray-900 whitespace-no-wrap">{violations.length > 0 ? violations[0].status : ""}</p>
+                                <p className={`${violations.length > 0? violationColor(violations[0]): "text-gray-900"} whitespace-no-wrap`}>{violations.length > 0 ? violations[0].status_dttm.split(" ")[0] : ""}</p>
+                            </td>
+                            <td className="px-2 py-3 border-b border-gray-200 bg-white">
+                                <p className={`${violations.length > 0? violationColor(violations[0]): "text-gray-900"} whitespace-no-wrap`}>{violations.length > 0 ? violations[0].status : ""}</p>
                             </td>
                         </tr>
                     </tbody>
@@ -257,19 +278,22 @@ function DetailPage() {
                                             <button className="font-bold"></button>
                                         </td>
                                         <td className="px-2 py-3 border-b border-gray-200 bg-white">
-                                            <p className="text-gray-900 whitespace-no-wrap">{violation.sam_id}</p>
+                                            <p className={`${ violationColor(violation) } whitespace-no-wrap`}>{violation.sam_id}</p>
                                         </td>
                                         <td className="px-2 py-3 border-b border-gray-200 bg-white">
-                                            <p className="text-gray-900 whitespace-no-wrap">{violation.case_no}</p>
+                                            <p className={`${ violationColor(violation) } whitespace-no-wrap`}>{violation.code}</p>
                                         </td>
                                         <td className="px-2 py-3 border-b border-gray-200 bg-white">
-                                            <p className="text-gray-900 whitespace-no-wrap">{violation.description}</p>
+                                            <p className={`${ violationColor(violation) } whitespace-no-wrap`}>{violation.case_no}</p>
                                         </td>
                                         <td className="px-2 py-3 border-b border-gray-200 bg-white">
-                                            <p className="text-gray-900 whitespace-no-wrap">{violation.status_dttm.split(" ")[0]}</p>
+                                            <p className={`${ violationColor(violation) } whitespace-no-wrap`}>{violation.description}</p>
                                         </td>
                                         <td className="px-2 py-3 border-b border-gray-200 bg-white">
-                                            <p className="text-gray-900 whitespace-no-wrap">{violation.status}</p>
+                                            <p className={`${ violationColor(violation) } whitespace-no-wrap`}>{violation.status_dttm.split(" ")[0]}</p>
+                                        </td>
+                                        <td className="px-2 py-3 border-b border-gray-200 bg-white">
+                                            <p className={`${ violationColor(violation) } whitespace-no-wrap`}>{violation.status}</p>
                                         </td>
                                     </tr>
                                 ))}

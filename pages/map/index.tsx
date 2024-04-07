@@ -71,9 +71,16 @@ const Map: React.FC<IMapProps> = () => {
 
     const handleAddressSelection = async (address: IAddress) => {
         // setSelectedAddress(address);
-        const addressString = JSON.stringify(address);
+        const res = (await fetch(`/api/address?search=${address.FULL_ADDRESS}`));
+        if (!res.ok) {
+            throw new Error('Network response was not ok.');
+        }
+        const generalAddress = await res.json();
+
+        const addressString = JSON.stringify(generalAddress[0]);
         const encodedAddress = encodeURIComponent(addressString);
         router.push(`/map/detail?address=${encodeURIComponent(encodedAddress)}`);
+
         try {
             setIsCoordsSet(true);
             /**
