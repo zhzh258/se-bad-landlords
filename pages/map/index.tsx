@@ -29,8 +29,6 @@ const Map: React.FC<IMapProps> = () => {
         setAddressSuggestions
     } = useSearchAPI();
 
-    const [selectedCoords, setSelectedCoords] = useState<ICoords>({ longitude: -71.0589, latitude: 42.3601 });
-    const [isCoordsSet, setIsCoordsSet] = useState<boolean>(false);
     const [landlords, setLandlords] = useState<ILandlord[] | null>(null) // null means loading || loading error
 
     const router = useRouter();
@@ -75,7 +73,6 @@ const Map: React.FC<IMapProps> = () => {
         const encodedAddress = encodeURIComponent(addressString);
         router.push(`/map/detail?address=${encodeURIComponent(encodedAddress)}`);
         try {
-            setIsCoordsSet(true);
             /**
              * Implementation of data fetch using samId in bpv dataset.
              * This doesn't work because BPV datasets only have properties with violations.
@@ -102,13 +99,6 @@ const Map: React.FC<IMapProps> = () => {
             if (data.length > 0) {
                 const latitude = parseFloat(data[0].lat);
                 const longitude = parseFloat(data[0].lon);
-
-                if (!isNaN(latitude) && !isNaN(longitude)) {
-                    setSelectedCoords({
-                        latitude: latitude,
-                        longitude: longitude
-                    });
-                }
             } else {
                 console.log('No Address!');
             }
@@ -199,7 +189,7 @@ const Map: React.FC<IMapProps> = () => {
                 <div className='font-bold text-[#58585B] my-7 text-xl'>
                     FIND PROPERTIES WITH VIOLATIONS BY AREA
                 </div>
-                <NewMap selectedCoords={selectedCoords} isCoordsSet={isCoordsSet} setIsCoordsSet={setIsCoordsSet} setSelectedCoords={setSelectedCoords} />
+                <NewMap/>
 
                 {/*this shows top 10 landlords using getStaticProps*/}
                 <div className='font-bold text-[#58585B] mt-12 mb-10 text-xl'>

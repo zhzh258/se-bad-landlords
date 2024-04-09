@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef} from 'react';
 import { useRouter} from 'next/router';
-import { IAddress, ICoords } from '@components/types';
+import { IAddress, ICoords, IViewport } from '@components/types';
 
 function debounce(func: (...args: any[]) => void, wait: number) {
     let timeout: NodeJS.Timeout | null = null;
@@ -20,11 +20,9 @@ function debounce(func: (...args: any[]) => void, wait: number) {
   }
 
 
-const MapSearchbar = ({ selectedCoords, isCoordsSet, setIsCoordsSet, setSelectedCoords } : {
-    selectedCoords: ICoords,
-    isCoordsSet: boolean,
-    setIsCoordsSet: React.Dispatch<React.SetStateAction<boolean>>,
-    setSelectedCoords: React.Dispatch<React.SetStateAction<ICoords>>
+const MapSearchbar = ({ viewport, setViewport } : {
+    viewport: IViewport,
+    setViewport: React.Dispatch<React.SetStateAction<IViewport>>
 }) => {
     const [selectedAddress, setSelectedAddress] = useState<IAddress | null>(null);
     const [addressSuggestions, setAddressSuggestions] = useState<IAddress[]>([]);
@@ -72,30 +70,7 @@ const MapSearchbar = ({ selectedCoords, isCoordsSet, setIsCoordsSet, setSelected
     
       const handleAddressSelection = async (address: IAddress) => {
         setSelectedAddress(address);
-        //const addressString = JSON.stringify(address);
-        //const encodedAddress = encodeURIComponent(addressString);
-        //router.push(`/map/detail?address=${encodeURIComponent(encodedAddress)}`);
         try {
-            setIsCoordsSet(true);
-            /**
-             * Implementation of data fetch using samId in bpv dataset.
-             * This doesn't work because BPV datasets only have properties with violations.
-             * SAM dataset contains all street address.
-             * I am leaving this here as all you need to do is change bpv to something else over in the api file
-             * if new dataset is found.
-             */
-            // const response = await fetch(`/api/parcel?samId=${address.SAM_ADDRESS_ID}`);
-            // const data = await response.json();
-            /**
-             * Receive data and extract latitude and longtitude here if new dataset found.
-             */
-    
-            // console.log('Clicked address:', address);
-            
-            /* This is OpenStreetMap Implementation
-               Issue with this was showing very wrong coords some property.
-               Probably due to having unit numbers.
-            */
             const fullAddress = `${address.FULL_ADDRESS}, ${address.MAILING_NEIGHBORHOOD}, ${address.ZIP_CODE}`;
             const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${fullAddress}`);
             const data = await response.json();
@@ -108,13 +83,14 @@ const MapSearchbar = ({ selectedCoords, isCoordsSet, setIsCoordsSet, setSelected
     
                 if (!isNaN(latitude) && !isNaN(longitude)) {
                     console.log(latitude, "xxxxxx", longitude)  
-                    setSelectedCoords({
+                    setViewport({
                         latitude: latitude,
-                        longitude: longitude
+                        longitude: longitude,
+                        zoom: viewport.zoom
                     });
                 }
             } else {
-                console.log('No Address!');
+                alert(`nominatim.openstreetmap.org can't find this address!`);
             }
         } catch (error) {
             console.error('Error:', error);

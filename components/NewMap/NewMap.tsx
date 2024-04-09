@@ -24,13 +24,6 @@ import { MapEvent, MapSourceDataEvent, ViewStateChangeEvent } from 'react-map-gl
 
 
 const NewMap = (
-  { selectedCoords, isCoordsSet, setIsCoordsSet, setSelectedCoords }: 
-  {
-    selectedCoords: ICoords,
-    isCoordsSet: boolean,
-    setIsCoordsSet: React.Dispatch<React.SetStateAction<boolean>>,
-    setSelectedCoords: React.Dispatch<React.SetStateAction<ICoords>>
-  }
 ) => {
   const router = useRouter();
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -59,16 +52,6 @@ const NewMap = (
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // init the viewport
-  useEffect(() => {
-    if (selectedCoords.latitude && selectedCoords.longitude && isCoordsSet) {
-      setViewport({
-        latitude: selectedCoords.latitude,
-        longitude: selectedCoords.longitude,
-        zoom: 17 // zoom level for when user searches
-      });
-    }
-  }, [selectedCoords, isCoordsSet]);
 
 
   // <Map> onLoad=
@@ -194,7 +177,7 @@ const NewMap = (
     if(mapLoading === true) return
     const map: mapboxgl.Map = event.target;
     { // neighborhoods-layer
-      const allNeighborhoodFeatures = map.queryRenderedFeatures(undefined, {layers: ["neighborhoods-fills"]} );
+      // const allNeighborhoodFeatures = map.queryRenderedFeatures(undefined, {layers: ["neighborhoods-fills"]} );
       const selectedFeatures = map.queryRenderedFeatures(event.point, {layers: ["neighborhoods-fills"]});
       if(selectedFeatures && selectedFeatures.length > 0 && selectedFeatures[0]) {
         const selectedFeature = selectedFeatures[0]; // the selected neighborhood feature.
@@ -262,11 +245,29 @@ const NewMap = (
     }
   }
 
+  // <Map> onMapZoom = 
   const handleMapZoom = (event: ViewStateChangeEvent<mapboxgl.Map>) => {
     // TODO
     const map: mapboxgl.Map = event.target;
   }
+  
+  
+  // <Map> onMouseLeave =
+  const handleMapMouseLeave = (event: any) => {
+    // TODO
+    const map: mapboxgl.Map = event.target;
+    const allNeighborhoodFeatures = map.queryRenderedFeatures(undefined, {layers: ["neighborhoods-fills"]} )
+    allNeighborhoodFeatures.map((neighborhoodFeature, index) => {
+      map.setFeatureState(
+        {source: 'neighborhoods', sourceLayer: 'census2020_bg_neighborhoods-5hyj9i',id: neighborhoodFeature.id,}, 
+        {hover: false,}
+      );
+    })
+    setHoveredNeighborhoodFeatureId(null)
+    setHoveredNeighborhoodFeatureName(null)
+  }
 
+  // <Map> onSourceData = 
   const handleMapOnSourceData = (event: MapSourceDataEvent<mapboxgl.Map>) => {
     const map: mapboxgl.Map = event.target;
     if (event.sourceId == "violations" && mapRef.current) {
@@ -302,6 +303,7 @@ const NewMap = (
             onMouseMove={handleMapMouseMove}
             onZoom={handleMapZoom}
             onSourceData={handleMapOnSourceData}
+            onMouseLeave={handleMapMouseLeave}
             ref={mapRef}
             style={{
               width: '100%',
@@ -334,18 +336,17 @@ const NewMap = (
             {/* Searchbar */}
             <section style={{ position: 'relative', top: 30, left: 30}}>
               <MapSearchbar
-                selectedCoords={selectedCoords}
-                setSelectedCoords={setSelectedCoords}
-                isCoordsSet={isCoordsSet}
-                setIsCoordsSet={setIsCoordsSet}
+                viewport={viewport}
+                setViewport={setViewport}
               />
             </section>
             {/* Current neighborhood name */}
-            <section className='absolute top-5 left-1/2 -translate-x-1/2 z-10 bg-white bg-opacity-80 p-2 rounded-lg shadow-md'>
+            
+            {hoveredNeighborhoodFeatureName && <section className='absolute top-5 left-1/2 -translate-x-1/2 z-10 bg-white bg-opacity-80 p-2 rounded-lg shadow-md'>
               <p className="text-lg font-lora text-center text-neighborhood-dark-blue">
-                {hoveredNeighborhoodFeatureName ? hoveredNeighborhoodFeatureName : "Neighborhood"}
+                {hoveredNeighborhoodFeatureName}
               </p>
-            </section>
+            </section>}
             {/* The neighborhood buttons */}
             <section className="absolute top-5 right-5 z-10 bg-white p-4 rounded-lg shadow-md">
               {/* <p>{mapLoading ? "t": "f"}</p>
