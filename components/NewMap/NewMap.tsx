@@ -39,7 +39,7 @@ const NewMap = (
   const [mapLoading, setMapLoading] = useState<boolean>(true) // whether the map is loading
   const [cardPopup, setCardPopup] = useState<ICardPopup | null>(null)
   // const [viewportBounds, setViewportBounds] = useState({ west: null, south: null, east: null, north: null }); // bound of the map
-  const [hoveredNeighborhoodFeatureId, setHoveredNeighborhoodFeatureId] = useState<number | null>(null) // The feature.id of the neighborhood the mouse is hovering
+  const [hoveredNeighborhoodFeatureId, setHoveredNeighborhoodFeatureId] = useState<number | string | null>(null) // The feature.id of the neighborhood the mouse is hovering
   const [hoveredNeighborhoodFeatureName, setHoveredNeighborhoodFeatureName] = useState<string | null>(null) // The feature.id of the neighborhood the mouse is hovering
   // const [hoveredBlockFeatureId, setHoveredBlockFeatureId] = useState<number | null>(null) // The feature.id of the neighborhood the mouse is hovering
   const [viewport, setViewport] = useState<IViewport>({
@@ -79,7 +79,7 @@ const NewMap = (
 
   // <Map> onClick=
   const handleMapClick = async (event: any) => {
-    const map = event.target;
+    const map: mapboxgl.Map = event.target;
     { // violations layer
       const selectedFeatures = event.target.queryRenderedFeatures(event.point, {layers: ["unclustered-violations", "clustered-violations", "cluster-violations-count"]});
       if(selectedFeatures.length > 0)
@@ -150,7 +150,7 @@ const NewMap = (
             {hover: true,}
           );
           map.setFeatureState(
-            {source: 'neighborhoods', sourceLayer: 'census2020_bg_neighborhoods-5hyj9i',id: hoveredNeighborhoodFeatureId,}, 
+            {source: 'neighborhoods', sourceLayer: 'census2020_bg_neighborhoods-5hyj9i',id: hoveredNeighborhoodFeatureId ?? undefined,}, 
             {hover: false,}
           );
         }
@@ -159,8 +159,9 @@ const NewMap = (
   }
   
   // <Map> onMove = 
-  const handleMapMove = (evt: ViewStateChangeEvent<mapboxgl.Map>) => {
-    const nextViewport = evt.viewState;
+  const handleMapMove = (event: ViewStateChangeEvent<mapboxgl.Map>) => {
+    const map: mapboxgl.Map = event.target;
+    const nextViewport = event.viewState;
     setViewport(nextViewport); // update viewport
     // // check if cards should be displayed
     // const shouldShowCards = nextViewport.zoom > 15;
@@ -191,16 +192,21 @@ const NewMap = (
   // <Map> onMouseMove = 
   const handleMapMouseMove = (event: any) => {
     if(mapLoading === true) return
-    const map = event.target;
+    const map: mapboxgl.Map = event.target;
     { // neighborhoods-layer
+      const allNeighborhoodFeatures = map.queryRenderedFeatures(undefined, {layers: ["neighborhoods-fills"]} );
       const selectedFeatures = map.queryRenderedFeatures(event.point, {layers: ["neighborhoods-fills"]});
       if(selectedFeatures && selectedFeatures.length > 0 && selectedFeatures[0]) {
         const selectedFeature = selectedFeatures[0]; // the selected neighborhood feature.
-        /* Better take a look at what does a feature look like */
-        // console.log(selectedFeature) 
+        // allNeighborhoodFeatures.map((neighborhoodFeature, index) => {
+        //   map.setFeatureState(
+        //     {source: 'neighborhoods', sourceLayer: 'census2020_bg_neighborhoods-5hyj9i',id: neighborhoodFeature.id,}, 
+        //     {hover: false,}
+        //   );
+        // })
         if (hoveredNeighborhoodFeatureId === null){
           // console.log(1)
-          setHoveredNeighborhoodFeatureId(selectedFeature.id)
+          setHoveredNeighborhoodFeatureId(selectedFeature.id ?? null)
           setHoveredNeighborhoodFeatureName(selectedFeature?.properties?.BlockGr202)
           map.setFeatureState(
             {source: 'neighborhoods', sourceLayer: 'census2020_bg_neighborhoods-5hyj9i',id: selectedFeature.id,}, 
@@ -208,26 +214,40 @@ const NewMap = (
           );
         } else if (hoveredNeighborhoodFeatureId !== null && hoveredNeighborhoodFeatureId === selectedFeature.id){
           // console.log(2)
-          // remains in the same neighborhood. do nothing
-        } else if (hoveredNeighborhoodFeatureId !== null && hoveredNeighborhoodFeatureId !== selectedFeature.id){
-          // console.log(3)
-          // move to a new one
-          setHoveredNeighborhoodFeatureId(selectedFeature.id);
+          // remains in the same neighborhood.
+          setHoveredNeighborhoodFeatureId(selectedFeature.id ?? null)
           setHoveredNeighborhoodFeatureName(selectedFeature?.properties?.BlockGr202)
           map.setFeatureState(
             {source: 'neighborhoods', sourceLayer: 'census2020_bg_neighborhoods-5hyj9i',id: selectedFeature.id,}, 
             {hover: true,}
           );
+        } else if (hoveredNeighborhoodFeatureId !== null && hoveredNeighborhoodFeatureId !== selectedFeature.id){
+          // console.log(3)
+          // move to a new one
+          setHoveredNeighborhoodFeatureId(selectedFeature.id ?? null);
+          setHoveredNeighborhoodFeatureName(selectedFeature?.properties?.BlockGr202)
           map.setFeatureState(
-            {source: 'neighborhoods', sourceLayer: 'census2020_bg_neighborhoods-5hyj9i',id: hoveredNeighborhoodFeatureId,}, 
+            {source: 'neighborhoods', sourceLayer: 'census2020_bg_neighborhoods-5hyj9i',id: selectedFeature.id ?? undefined,}, 
+            {hover: true,}
+          );
+          map.setFeatureState(
+            {source: 'neighborhoods', sourceLayer: 'census2020_bg_neighborhoods-5hyj9i',id: hoveredNeighborhoodFeatureId ?? undefined,}, 
             {hover: false,}
           );
         }
-      } else {
+      } else if(hoveredNeighborhoodFeatureId) { // when user move the mouse out of boston
+        // allNeighborhoodFeatures.map((neighborhoodFeature, index) => {
+        //   map.setFeatureState(
+        //     {source: 'neighborhoods', sourceLayer: 'census2020_bg_neighborhoods-5hyj9i',id: neighborhoodFeature.id,}, 
+        //     {hover: false,}
+        //   );
+        // })
         map.setFeatureState(
           {source: 'neighborhoods', sourceLayer: 'census2020_bg_neighborhoods-5hyj9i',id: hoveredNeighborhoodFeatureId,}, 
           {hover: false,}
         );
+      
+        
         setHoveredNeighborhoodFeatureId(null)
         setHoveredNeighborhoodFeatureName(null)
       }
@@ -244,9 +264,11 @@ const NewMap = (
 
   const handleMapZoom = (event: ViewStateChangeEvent<mapboxgl.Map>) => {
     // TODO
+    const map: mapboxgl.Map = event.target;
   }
 
   const handleMapOnSourceData = (event: MapSourceDataEvent<mapboxgl.Map>) => {
+    const map: mapboxgl.Map = event.target;
     if (event.sourceId == "violations" && mapRef.current) {
       const isViolationsSourceLoaded = mapRef?.current?.isSourceLoaded("violations");
       setMapLoading(mapLoading && !isViolationsSourceLoaded)
@@ -319,9 +341,9 @@ const NewMap = (
               />
             </section>
             {/* Current neighborhood name */}
-            <section className='absolute top-5 left-1/2 -translate-x-1/2 z-10 bg-white bg-opacity-50 p-2 rounded-lg shadow-md'>
+            <section className='absolute top-5 left-1/2 -translate-x-1/2 z-10 bg-white bg-opacity-80 p-2 rounded-lg shadow-md'>
               <p className="text-lg font-lora text-center text-neighborhood-dark-blue">
-                {hoveredNeighborhoodFeatureName ? hoveredNeighborhoodFeatureName : "Boston"}
+                {hoveredNeighborhoodFeatureName ? hoveredNeighborhoodFeatureName : "Neighborhood"}
               </p>
             </section>
             {/* The neighborhood buttons */}
