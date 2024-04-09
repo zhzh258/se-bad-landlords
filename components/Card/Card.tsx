@@ -21,7 +21,7 @@ const Card = ({ properties }: {properties: IProperties} ) => {
     }
   };
   return (
-    <div className="grid-item bg-white p-5 rounded-lg border-[0.5px] border-[#58585B]">
+    <div className="grid-item bg-white p-5">
       <p className="font-lora text-neighborhood-dark-blue text-base">
         {addressDetails.FULL_ADDRESS}
       </p>

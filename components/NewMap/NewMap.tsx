@@ -120,7 +120,7 @@ const NewMap = (
     }
     { // neighborhood layer
       const selectedFeatures = event.target.queryRenderedFeatures(event.point, {layers: ["neighborhoods-fills"]});
-      if (selectedFeatures && selectedFeatures.length > 0 && selectedFeatures[0]) {
+      if (selectedFeatures && selectedFeatures.length > 0 && selectedFeatures[0] && viewport.zoom < 13 ) {
         const selectedFeature = selectedFeatures[0];
         console.log(selectedFeature)
         // The data is so weird... Sometimes it's wrapped in an array sometimes it's not.
@@ -285,7 +285,8 @@ const NewMap = (
               width: '100%',
               height: mapHeight? mapHeight : 10
             }}
-            mapStyle="mapbox://styles/mapbox/streets-v12"
+            mapStyle="mapbox://styles/mapbox/streets-v12" // street mode
+            // mapStyle="mapbox://styles/mapbox/satellite-v" // satellite mode
             mapboxAccessToken="pk.eyJ1Ijoic3BhcmstYmFkbGFuZGxvcmRzIiwiYSI6ImNsaWpsMXc3ZTA4MGszZXFvaDBrc3I0Z3AifQ.mMM7raXYPneJfzyOoflFfQ"
           >
             {/* Map config */}
@@ -317,6 +318,12 @@ const NewMap = (
                 setIsCoordsSet={setIsCoordsSet}
               />
             </section>
+            {/* Current neighborhood name */}
+            <section className='absolute top-5 left-1/2 -translate-x-1/2 z-10 bg-white bg-opacity-50 p-2 rounded-lg shadow-md'>
+              <p className="text-lg font-lora text-center text-neighborhood-dark-blue">
+                {hoveredNeighborhoodFeatureName ? hoveredNeighborhoodFeatureName : "Boston"}
+              </p>
+            </section>
             {/* The neighborhood buttons */}
             <section className="absolute top-5 right-5 z-10 bg-white p-4 rounded-lg shadow-md">
               {/* <p>{mapLoading ? "t": "f"}</p>
@@ -326,11 +333,6 @@ const NewMap = (
               </p>
               {/* <p>{viewport.longitude}   {viewport.latitude}</p>
               <p>{selectedCoords.longitude}   {selectedCoords.latitude}</p> */}
-              {hoveredNeighborhoodFeatureName && 
-                <p className='text-lg font-lora mb-2 mt-2 text-center text-neighborhood-dark-blue'>
-                  {hoveredNeighborhoodFeatureName}
-                </p>
-              }
               {neighborhoods.map((neighborhood, index) => (
                 <div key={index}>
                   <button
@@ -356,11 +358,10 @@ const NewMap = (
             {/* Popup */}
             <section>
             { cardPopup && 
-              <div>
               <Popup
               // MUST add a key here. Or else Mapbox will destroy the Popup.
               // which prevent the next popup from showing up (how terrible!)
-                key={cardPopup.latitude + cardPopup.longitude}
+                key={(cardPopup.latitude + cardPopup.longitude)*0.5*(cardPopup.latitude + cardPopup.longitude + 1) + cardPopup.longitude}
                 latitude={cardPopup.latitude}
                 longitude={cardPopup.longitude}
                 closeButton={false}
@@ -370,8 +371,7 @@ const NewMap = (
                 <Card 
                   properties={cardPopup.properties} 
                 />
-              </Popup>
-              </div>}
+              </Popup>}
             </section>
           </Map>
         </div>
