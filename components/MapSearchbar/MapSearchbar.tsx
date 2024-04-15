@@ -71,6 +71,7 @@ const MapSearchbar = ({ viewport, setViewport } : {
       const handleAddressSelection = async (address: IAddress) => {
         setSelectedAddress(address);
         try {
+            alert(address.X_COORD + " " + address.Y_COORD)
             const fullAddress = `${address.FULL_ADDRESS}, ${address.MAILING_NEIGHBORHOOD}, ${address.ZIP_CODE}`;
             const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${fullAddress}`);
             const data = await response.json();

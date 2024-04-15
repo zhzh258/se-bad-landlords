@@ -2,21 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import NewMap from '@components/NewMap/NewMap';
 import { useRouter } from 'next/router';
 import { useSearchAPI, IAddress } from '../api/search';
+import { ITopTen } from '@components/types';
 
 
-interface ILandlord {
-    OWNER: string;
-    FULL_ADDRESS: string;
-    CITY: string;
-    violations_count: number;
-}
 interface IMapProps {
-    landlords: ILandlord[];
-}
-
-interface ICoords {
-    latitude: number,
-    longitude: number
+    topTen: ITopTen[];
 }
 
 const Map: React.FC<IMapProps> = () => {
@@ -29,14 +19,31 @@ const Map: React.FC<IMapProps> = () => {
         setAddressSuggestions
     } = useSearchAPI();
 
-    const [landlords, setLandlords] = useState<ILandlord[] | null>(null) // null means loading || loading error
-
+    const [topTen, setTopTen] = useState<ITopTen[] | null>(null) // null means loading || loading error
     const router = useRouter();
 
     const inputRef = useRef<HTMLInputElement>(null); // reference for searchbox
     const suggestionsRef = useRef<HTMLUListElement>(null); // reference for suggestions
-
     useEffect(() => {
+        const fetchLandlords = async () => {
+            try {
+                const res = await fetch(`${base_url}/api/landlords/top-ten`);
+                if (res.ok) {
+                    const topTen: ITopTen[] = await res.json() as ITopTen[];
+                    console.log("len: ", topTen.length)
+                    setTopTen(topTen);
+                    return
+                } else {
+                    console.error('Failed to fetch landlords:', res.statusText);
+                    setTopTen(null)
+                }
+    
+            } catch (err) {
+                console.error(err);
+                setTopTen(null);
+                return
+            }
+        }
         const fetchData = async () => {
             fetchLandlords();
         }
@@ -107,24 +114,12 @@ const Map: React.FC<IMapProps> = () => {
         }
     };
 
-    const fetchLandlords = async () => {
-        try {
-            const res = await fetch(`${base_url}/api/landlords/top-ten`);
-            if (res.ok) {
-                const landlords: ILandlord[] = await res.json() as ILandlord[];
-                console.log("len: ", landlords.length)
-                setLandlords(landlords);
-                return
-            } else {
-                console.error('Failed to fetch landlords:', res.statusText);
-                setLandlords(null)
-            }
-
-        } catch (err) {
-            console.error(err);
-            setLandlords(null);
-            return
-        }
+    const handleClickAddress = (addressDetails: IAddress) => {
+        if (addressDetails) {
+            const addressString = JSON.stringify(addressDetails);
+            const encodedAddress = encodeURIComponent(addressString);
+            router.push(`/map/detail?address=${encodedAddress}`);
+          }
     }
 
     return (
@@ -196,18 +191,20 @@ const Map: React.FC<IMapProps> = () => {
                     TOP 10 PROPERTIES BY VIOLATION COUNT
                 </div>
                 <div className="grid grid-cols-1 mb-20 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-x-9 gap-y-16">
-                    {landlords === null ?
+                    {topTen === null ?
                         "Loading..."
                         :
-                        landlords.map((landlord, index) => (
-                            <div className="grid-item bg-white p-4 rounded-lg border-[0.5px] border-[#58585B]" key={index}>
-                                <div>
+                        topTen.map((address, index) => (
+                            <div className="grid-item bg-white p-4 rounded-lg border-[0.5px] border-[#58585B] flex flex-col" key={index}>
+                                <div className="grow flex flex-col justify-evenly">
                                     <div className="font-['Lora'] text-sm mb-4">Property Type</div>
-                                    <span className="block font-bold text-lg text-[#58585B]">{landlord.FULL_ADDRESS},</span>
-                                    <span className="block font-bold text-lg text-[#58585B]">{landlord.CITY} MA</span>
+                                    <span className="block font-bold text-lg text-[#000000]">{address.FULL_ADDRESS}</span>
+                                    <span className="block font-bold text-md text-[#58585B]">{address.OWNER}</span>
+                                    <span className="block font-normal text-sm text-[#FF2E00]">Violations: {address.violations_count}</span>
+                                    <span className="block font-medium text-sm text-[#58585B]">{address.CITY} {address.ZIP_CODE}</span>
                                 </div>
-                                <div className="flex justify-end">
-                                    <img src="/property-arrow.svg" alt="property-arrow" className="mt-5" />
+                                <div className="grow-0 flex justify-end" onClick={() => {address && handleClickAddress(address)}}>
+                                    <img src="/property-arrow.svg" alt="property-arrow" className="mt-5 m-0 cursor-pointer hover:opacity-60" />
                                 </div>
                             </div>
                         ))}
@@ -224,21 +221,19 @@ const base_url = process.env.SITE_URL || 'http://localhost:3000';
 
 // export const getStaticProps = async () => {
 //     try {
-//         const res = await fetch(`${base_url}/api/landlords/top-ten`);
+//         const res = await fetch(`${base_url}/api/topTen/top-ten`);
 //         if (res.ok) {
-//             const landlords: ILandlord[] = await res.json();
-//             return { props: { landlords } };
+//             const topTen: ITopTen[] = await res.json();
+//             return { props: { topTen } };
 //         }
 
-//         console.error('Failed to fetch landlords:', res.statusText);
-//         return { props: { landlords: [] } };
+//         console.error('Failed to fetch topTen:', res.statusText);
+//         return { props: { topTen: [] } };
 //     } catch (err) {
 //         console.error(err);
-//         return { props: { landlords: [] } };
+//         return { props: { topTen: [] } };
 //     }
 // }
-
-
 
 
 export default Map;

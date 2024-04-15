@@ -34,3 +34,16 @@ export interface IAddress {
     Y_COORD: string;
     ZIP_CODE: string;
 }
+
+// prisma 
+// view violations_view {...}
+export interface IViolationView {
+    OWNER: string;
+    FULL_ADDRESS: string;
+    CITY: string;
+    violations_count: number;
+}
+
+export interface ITopTen extends IViolationView, IAddress {
+    FULL_ADDRESS: string; // avoid conflict
+}

@@ -34,7 +34,7 @@ const Card = ({ properties }: {properties: IProperties} ) => {
       </p>
       <div className="flex justify-end">
         {/* click the button to redirect to the detail page */}
-        <img src="/property-arrow.svg" onClick={handleButtonClick} alt="property-arrow" className="m-0 cursor-pointer hover:shadow-lg transition-shadow duration-200 ease-in-out" />
+        <img src="/property-arrow.svg" onClick={handleButtonClick} alt="property-arrow" className="m-0 cursor-pointer hover:opacity-60" />
       </div>
     </div>
   )
