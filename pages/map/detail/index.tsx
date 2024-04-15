@@ -241,6 +241,8 @@ function DetailPage() {
 
             {/* street violations table */}
             <div className="max-w-full overflow-x-auto">
+            {violations.length > 0 ? (
+                <>
                 <div className="text-lg text-white font-semibold py-2 px-4 bg-[#c8a992]">
                     {addressObj.FULL_ADDRESS} VIOLATIONS
                 </div>
@@ -330,6 +332,12 @@ function DetailPage() {
                     // </div>
                 )}
                 </table>
+                </>
+             ) : (
+                <div className="text-lg text-center py-5">
+                    <strong>No Violations</strong> — {addressObj.FULL_ADDRESS} has no recorded violations.
+                </div>
+            )}
             </div>
 
             <div className="h-11"></div>
