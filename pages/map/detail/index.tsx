@@ -15,6 +15,9 @@ interface IViolation {
 
 interface ILandlord {
     OWNER: string;
+    UNIT_NUM: string;
+    year: string;
+    sold: string;
 }
 
 function DetailPage() {
@@ -125,7 +128,26 @@ function DetailPage() {
                 const filteredLandlords = landlordsData.filter((a, index, arr) => 
                     !arr.some((b, bIndex) => bIndex !== index && b.OWNER.includes(a.OWNER))
                 );
-                setLandlords(filteredLandlords);
+
+                // sort by unit num and then sort by year
+                filteredLandlords.sort((a, b) => {
+                    if (a.UNIT_NUM !== b.UNIT_NUM) {
+                        return parseInt(a.UNIT_NUM) - parseInt(b.UNIT_NUM);
+                    } else {
+                        return parseInt(a.year) - parseInt(b.year);
+                    }
+                });
+    
+                // calculate the interval owner holds the property
+                const landlordsWithIntervals = filteredLandlords.map((landlord, index, array) => {
+                    const nextLandlord = array[index + 1];
+                    // if unit num is same, then the year of next row is the sold year of the property
+                    const sold = (nextLandlord && nextLandlord.UNIT_NUM === landlord.UNIT_NUM) ? nextLandlord.year : new Date().getFullYear().toString();
+                    return { ...landlord, sold };
+                });
+    
+
+                setLandlords(landlordsWithIntervals);
                 console.log(landlords);
             } else {
                 throw new Error('Network response was not ok.');
@@ -412,8 +434,8 @@ function DetailPage() {
                             <p className="mt-2">100 addresses in total</p>
                             <p className="text-blue-600">64 properties without violations</p>
                             <p className="text-red-600">37 properties with violations</p> */}
-                            <p className="text-lg">xxx: xxx</p>
-                            <p className="mt-2">xxxxxx</p>
+                            <p className="text-lg">Unit Number: {landlord.UNIT_NUM}</p>
+                            <p className="mt-2">Owned from: {landlord.year} to {landlord.sold}</p>
                             <p className="text-blue-600">xxxxxx</p>
                             <p className="text-red-600">xxxxxx</p>
                         </div>
