@@ -12,6 +12,7 @@ const Card = ({ properties }: {properties: IProperties} ) => {
   const router = useRouter();
   const SAM_ID: string = properties.SAM_ID
   const addressDetails: IAddress = properties.addressDetails
+  const violation_count: string = properties.VIOLATION_COUNT
 
   const handleButtonClick = () => {
     if (addressDetails) {
@@ -22,18 +23,18 @@ const Card = ({ properties }: {properties: IProperties} ) => {
   };
   return (
     <div className="grid-item bg-white p-5">
-      <p className="font-lora text-neighborhood-dark-blue text-base">
+      <p className="font-lora text-neighborhood-dark-blue text-base font-bold">
         {addressDetails.FULL_ADDRESS}
       </p>
       <p className="font-lora text-neighborhood-dark-blue text-sm mt-1">
-        {addressDetails.MAILING_NEIGHBORHOOD}
+        Violations: {violation_count}
       </p>
       <p className="font-lora text-neighborhood-dark-blue text-sm mt-1">
-        {addressDetails.ZIP_CODE}
+        {addressDetails.MAILING_NEIGHBORHOOD} {addressDetails.ZIP_CODE}
       </p>
       <div className="flex justify-end">
         {/* click the button to redirect to the detail page */}
-        <img src="/property-arrow.svg" onClick={handleButtonClick} alt="property-arrow" className="m-0 cursor-pointer" />
+        <img src="/property-arrow.svg" onClick={handleButtonClick} alt="property-arrow" className="m-0 cursor-pointer hover:shadow-lg transition-shadow duration-200 ease-in-out" />
       </div>
     </div>
   )

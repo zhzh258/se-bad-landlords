@@ -11,17 +11,18 @@ import prisma from "../../../prisma/prismaClient"
 
 type RowData = {
     // below is columns from prisma.bpv
-    sam_id: string;
-    latitude: string;
-    longitude: string;
-    // below is IAddress (Remember SAM_ADDRESS_ID)
-    // SAM_ADDRESS_ID: string  // same to sam_id
-    FULL_ADDRESS         :String
-    MAILING_NEIGHBORHOOD :String
-    ZIP_CODE             :String
-    X_COORD              :String
-    Y_COORD              :String
-    PARCEL               :String
+    sam_id:         string;
+    latitude:       string;
+    longitude:      string;
+    // below is IAddress
+    // SAM_ADDRESS_ID: string  (same to sam_id)
+    FULL_ADDRESS:           string
+    MAILING_NEIGHBORHOOD:   string
+    ZIP_CODE:               string
+    X_COORD:                string
+    Y_COORD:                string
+    PARCEL:                 string
+    VIOLATION_COUNT:        number
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -55,7 +56,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             MAX(sam."ZIP_CODE") AS "ZIP_CODE",
             MAX(sam."X_COORD") AS "X_COORD",
             MAX(sam."Y_COORD") AS "Y_COORD",
-            MAX(sam."PARCEL") AS "PARCEL"
+            MAX(sam."PARCEL") AS "PARCEL",
+            COUNT(bpv."sam_id") AS "VIOLATION_COUNT"
       FROM
           sam
       JOIN
@@ -78,6 +80,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 },
                 properties: {
                     SAM_ID: row.sam_id,
+                    VIOLATION_COUNT: row.VIOLATION_COUNT.toString(),
                     addressDetails: {
                         SAM_ADDRESS_ID: row.sam_id,
                         FULL_ADDRESS: row.FULL_ADDRESS,

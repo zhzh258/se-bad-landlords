@@ -8,6 +8,7 @@ export interface ICardPopup {
 // `properties` attribute of each Mapbox Feature
 export interface IProperties {
     SAM_ID: string;
+    VIOLATION_COUNT: string;
     addressDetails: IAddress;
 }
 

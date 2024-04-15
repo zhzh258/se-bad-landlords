@@ -41,7 +41,7 @@ const NewMap = (
     zoom: 11.5
   });// initial state of viewport (somewhere near back bay...)
   const [mapHeight, setMapHeight] = useState<number | null>(null); // sets the map size depending on the height
-  
+
   // init the map height
   useEffect(() => {
     setMapHeight(window.innerHeight * 0.7);
@@ -80,6 +80,7 @@ const NewMap = (
               latitude: selectedFeature.geometry.coordinates[1],
               properties: {
                 SAM_ID: selectedFeature.properties.SAM_ID,
+                VIOLATION_COUNT: selectedFeature.properties.VIOLATION_COUNT,
                 addressDetails: (typeof selectedFeature.properties.addressDetails ==="string" ? JSON.parse(selectedFeature.properties.addressDetails) : selectedFeature.properties.addressDetails)
               }
             })

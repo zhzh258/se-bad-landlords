@@ -6,3 +6,18 @@ map-points1:
 
 map-points2:
     show all properties that has a owner with 6 or more violations.
+    Returns geoJson {latitude, longitude, sam_id}
+
+map-points2:
+    show all properties that has a owner with 6 or more violations.
+    Returns geoJson {
+        bpv."sam_id",
+            bpv."latitude",
+            bpv."longitude",
+            MAX(sam."FULL_ADDRESS") AS "FULL_ADDRESS", 
+            MAX(sam."MAILING_NEIGHBORHOOD") AS "MAILING_NEIGHBORHOOD",
+            MAX(sam."ZIP_CODE") AS "ZIP_CODE",
+            MAX(sam."X_COORD") AS "X_COORD",
+            MAX(sam."Y_COORD") AS "Y_COORD",
+            MAX(sam."PARCEL") AS "PARCEL"
+    }

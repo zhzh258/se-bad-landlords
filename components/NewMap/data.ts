@@ -94,10 +94,17 @@ export const unclusteredViolationsLayer: any = {
   ] as ['!', ['has', 'point_count']],
   
   paint: {
-    'circle-color': '#FB4D42',
+    'circle-color': [
+      'interpolate',
+      ['linear'],
+      ['to-number', ['get', 'VIOLATION_COUNT']],
+      1, '#FFFFBF',    // Yellow at low VIOLATION_COUNT (e.g., VIOLATION_COUNT = 1)
+      15, '#FF2E00'    // Red at high VIOLATION_COUNT   (e.g., VIOLATION_COUNT = 100)
+    ],
     'circle-radius': 6,
-    // 'circle-stroke-width': 1.5,
-    'circle-stroke-color': '#FB4D42'
+    'circle-stroke-width': 3,
+    'circle-stroke-color': '#FFFFFF',
+    'circle-stroke-opacity': 0.4
   }
 }
 
