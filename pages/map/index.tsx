@@ -76,9 +76,21 @@ const Map: React.FC<IMapProps> = () => {
 
     const handleAddressSelection = async (address: IAddress) => {
         // setSelectedAddress(address);
-        const addressString = JSON.stringify(address);
-        const encodedAddress = encodeURIComponent(addressString);
-        router.push(`/map/detail?address=${encodeURIComponent(encodedAddress)}`);
+        const res = (await fetch(`/api/address?search=${address.FULL_ADDRESS}`));
+        if (!res.ok) {
+            // throw new Error('Network response was not ok.');
+            const addressString = JSON.stringify(address);
+            const encodedAddress = encodeURIComponent(addressString);
+            router.push(`/map/detail?address=${encodeURIComponent(encodedAddress)}`);
+        }
+        else {
+            const generalAddress = await res.json();
+
+            const addressString = JSON.stringify(generalAddress[0]);
+            const encodedAddress = encodeURIComponent(addressString);
+            router.push(`/map/detail?address=${encodeURIComponent(encodedAddress)}`);
+        }
+
         try {
             /**
              * Implementation of data fetch using samId in bpv dataset.

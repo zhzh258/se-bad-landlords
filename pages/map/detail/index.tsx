@@ -13,11 +13,19 @@ interface IViolation {
     case_no: string;
 }
 
+interface ILandlord {
+    OWNER: string;
+    UNIT_NUM: string;
+    year: string;
+    sold: string;
+}
+
 function DetailPage() {
     const router = useRouter();
     const [addressObj, setAddressObj] = useState<IAddress | null>(null);
     const [violations, setViolations] = useState<IViolation[]>([]);
     const [units, setUnits] = useState<IAddress[]>([]); 
+    const [landlords, setLandlords] = useState<ILandlord[]>([]); 
     const [expandTableVisible_st, setexpandTableVisible_st] = useState(false);
     const [expandTableVisible_un, setexpandTableVisible_un] = useState(false);
     const [expandTableVisible_la, setexpandTableVisible_la] = useState(false);
@@ -36,9 +44,22 @@ function DetailPage() {
 
     const handleAddressSelection = async (address: IAddress) => {
         // setSelectedAddress(address);
-        const addressString = JSON.stringify(address);
-        const encodedAddress = encodeURIComponent(addressString);
-        router.push(`/map/detail?address=${encodeURIComponent(encodedAddress)}`);
+        console.log(address.FULL_ADDRESS)
+        const res = (await fetch(`/api/address?search=${address.FULL_ADDRESS}`));
+        if (!res.ok) {
+            // throw new Error('Network response was not ok.');
+            const addressString = JSON.stringify(address);
+            const encodedAddress = encodeURIComponent(addressString);
+            router.push(`/map/detail?address=${encodeURIComponent(encodedAddress)}`);
+        }
+        else {
+            const generalAddress = await res.json();
+
+            const addressString = JSON.stringify(generalAddress[0]);
+            const encodedAddress = encodeURIComponent(addressString);
+            router.push(`/map/detail?address=${encodeURIComponent(encodedAddress)}`);
+        }
+        
     };
 
     useEffect(() => {
@@ -56,6 +77,8 @@ function DetailPage() {
                 const generalAddress = JSON.parse(decodedAddress).FULL_ADDRESS;
                 const addressWithHash = generalAddress + ' #';
                 fetchAssociatedUnits(addressWithHash);
+
+                fetchAssociatedLandlords(JSON.parse(decodedAddress).PARCEL);
             } catch (error) {
                 console.error("Error parsing address:", error);
                 setAddressObj(null);
@@ -93,6 +116,48 @@ function DetailPage() {
         }
     };
 
+    const fetchAssociatedLandlords = async (ParcelID: string) => {
+        try {
+            console.log(ParcelID);
+            const res = await fetch(`/api/landlords/by-pid?pid=${ParcelID}`);
+            if (res.ok) {
+                const landlordsData = await res.json();
+                console.log(landlordsData);
+                // setLandlords(landlordsData);
+                // console.log(landlords);
+                const filteredLandlords = landlordsData.filter((a, index, arr) => 
+                    !arr.some((b, bIndex) => bIndex !== index && b.OWNER.includes(a.OWNER))
+                );
+
+                // sort by unit num and then sort by year
+                filteredLandlords.sort((a, b) => {
+                    if (a.UNIT_NUM !== b.UNIT_NUM) {
+                        return parseInt(a.UNIT_NUM) - parseInt(b.UNIT_NUM);
+                    } else {
+                        return parseInt(a.year) - parseInt(b.year);
+                    }
+                });
+    
+                // calculate the interval owner holds the property
+                const landlordsWithIntervals = filteredLandlords.map((landlord, index, array) => {
+                    const nextLandlord = array[index + 1];
+                    // if unit num is same, then the year of next row is the sold year of the property
+                    const sold = (nextLandlord && nextLandlord.UNIT_NUM === landlord.UNIT_NUM) ? nextLandlord.year : new Date().getFullYear().toString();
+                    return { ...landlord, sold };
+                });
+    
+
+                setLandlords(landlordsWithIntervals);
+                console.log(landlords);
+            } else {
+                throw new Error('Network response was not ok.');
+            }
+        } catch (error) {
+            setLandlords([]);
+            console.error(error);
+        }
+    };
+
     if (!addressObj) {
         return <div>Loading...</div>;
     }
@@ -108,6 +173,14 @@ function DetailPage() {
     const toggleTableVisibility_la = () => {
         setexpandTableVisible_la(!expandTableVisible_la);
     };
+
+    function violationColor(violation: IViolation) {
+        if (violation.code.includes('527') || violation.code.includes('780')) {
+            return 'text-red-500';
+        } else {
+            return 'text-gray-900'; 
+        }
+    }
 
     return (
         <div className="px-10 relative">
@@ -168,6 +241,8 @@ function DetailPage() {
 
             {/* street violations table */}
             <div className="max-w-full overflow-x-auto">
+            {violations.length > 0 ? (
+                <>
                 <div className="text-lg text-white font-semibold py-2 px-4 bg-[#c8a992]">
                     {addressObj.FULL_ADDRESS} VIOLATIONS
                 </div>
@@ -178,7 +253,13 @@ function DetailPage() {
                                  
                             </th>
                             <th className="px-2 py-3 border-b-2 border-gray-200 bg-white text-center font-bold text-gray-600 uppercase tracking-wider">
-                                CODE VIOLATIONS
+                                SAM ID
+                            </th>
+                            <th className="px-2 py-3 border-b-2 border-gray-200 bg-white text-center font-bold text-gray-600 uppercase tracking-wider">
+                                CODE VIOLATION
+                            </th>
+                            <th className="px-2 py-3 border-b-2 border-gray-200 bg-white text-center font-bold text-gray-600 uppercase tracking-wider">
+                                CASE NUMBER
                             </th>
                             <th className="px-2 py-3 border-b-2 border-gray-200 bg-white text-center font-bold text-gray-600 uppercase tracking-wider">
                                 DESCRIPTION
@@ -189,9 +270,6 @@ function DetailPage() {
                             <th className="px-2 py-3 border-b-2 border-gray-200 bg-white text-center font-bold text-gray-600 uppercase tracking-wider">
                                 NOTES
                             </th>
-                            <th className="px-2 py-3 border-b-2 border-gray-200 bg-white text-center font-bold text-gray-600 uppercase tracking-wider">
-                                SAM ID
-                            </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -200,19 +278,22 @@ function DetailPage() {
                                 <button onClick={toggleTableVisibility_st} className={`font-bold ${expandTableVisible_st ? 'transform rotate-90' : ''}`}>{"›"}</button>
                             </td>
                             <td className="px-2 py-3 border-b border-gray-200 bg-white">
-                                <p className="text-gray-900 whitespace-no-wrap">{violations.length > 0 ? violations[0].case_no : ""}</p>
+                                <p className={`${violations.length > 0? violationColor(violations[0]): "text-gray-900"} whitespace-no-wrap`}>{violations.length > 0 ? violations[0].sam_id : ""}</p>
                             </td>
                             <td className="px-2 py-3 border-b border-gray-200 bg-white">
-                                <p className="text-gray-900 whitespace-no-wrap">{violations.length > 0 ? violations[0].description : ""}</p>
+                                <p className={`${violations.length > 0? violationColor(violations[0]): "text-gray-900"} whitespace-no-wrap`}>{violations.length > 0 ? violations[0].code : ""}</p>
                             </td>
                             <td className="px-2 py-3 border-b border-gray-200 bg-white">
-                                <p className="text-gray-900 whitespace-no-wrap">{violations.length > 0 ? violations[0].status_dttm.split(" ")[0] : ""}</p>
+                                <p className={`${violations.length > 0? violationColor(violations[0]): "text-gray-900"} whitespace-no-wrap`}>{violations.length > 0 ? violations[0].case_no : ""}</p>
                             </td>
                             <td className="px-2 py-3 border-b border-gray-200 bg-white">
-                                <p className="text-gray-900 whitespace-no-wrap">{violations.length > 0 ? violations[0].status : ""}</p>
+                                <p className={`${violations.length > 0? violationColor(violations[0]): "text-gray-900"} whitespace-no-wrap`}>{violations.length > 0 ? violations[0].description : ""}</p>
                             </td>
                             <td className="px-2 py-3 border-b border-gray-200 bg-white">
-                                <p className="text-gray-900 whitespace-no-wrap">{violations.length > 0 ? violations[0].sam_id : ""}</p>
+                                <p className={`${violations.length > 0? violationColor(violations[0]): "text-gray-900"} whitespace-no-wrap`}>{violations.length > 0 ? violations[0].status_dttm.split(" ")[0] : ""}</p>
+                            </td>
+                            <td className="px-2 py-3 border-b border-gray-200 bg-white">
+                                <p className={`${violations.length > 0? violationColor(violations[0]): "text-gray-900"} whitespace-no-wrap`}>{violations.length > 0 ? violations[0].status : ""}</p>
                             </td>
                         </tr>
                     </tbody>
@@ -227,19 +308,22 @@ function DetailPage() {
                                             <button className="font-bold"></button>
                                         </td>
                                         <td className="px-2 py-3 border-b border-gray-200 bg-white">
-                                            <p className="text-gray-900 whitespace-no-wrap">{violation.case_no}</p>
+                                            <p className={`${ violationColor(violation) } whitespace-no-wrap`}>{violation.sam_id}</p>
                                         </td>
                                         <td className="px-2 py-3 border-b border-gray-200 bg-white">
-                                            <p className="text-gray-900 whitespace-no-wrap">{violation.description}</p>
+                                            <p className={`${ violationColor(violation) } whitespace-no-wrap`}>{violation.code}</p>
                                         </td>
                                         <td className="px-2 py-3 border-b border-gray-200 bg-white">
-                                            <p className="text-gray-900 whitespace-no-wrap">{violation.status_dttm.split(" ")[0]}</p>
+                                            <p className={`${ violationColor(violation) } whitespace-no-wrap`}>{violation.case_no}</p>
                                         </td>
                                         <td className="px-2 py-3 border-b border-gray-200 bg-white">
-                                            <p className="text-gray-900 whitespace-no-wrap">{violation.status}</p>
+                                            <p className={`${ violationColor(violation) } whitespace-no-wrap`}>{violation.description}</p>
                                         </td>
                                         <td className="px-2 py-3 border-b border-gray-200 bg-white">
-                                            <p className="text-gray-900 whitespace-no-wrap">{violation.sam_id}</p>
+                                            <p className={`${ violationColor(violation) } whitespace-no-wrap`}>{violation.status_dttm.split(" ")[0]}</p>
+                                        </td>
+                                        <td className="px-2 py-3 border-b border-gray-200 bg-white">
+                                            <p className={`${ violationColor(violation) } whitespace-no-wrap`}>{violation.status}</p>
                                         </td>
                                     </tr>
                                 ))}
@@ -248,6 +332,12 @@ function DetailPage() {
                     // </div>
                 )}
                 </table>
+                </>
+             ) : (
+                <div className="text-lg text-center py-5">
+                    <strong>No Violations</strong> — {addressObj.FULL_ADDRESS} has no recorded violations.
+                </div>
+            )}
             </div>
 
             <div className="h-11"></div>
@@ -342,27 +432,35 @@ function DetailPage() {
             <hr style={{ width: '100%', borderTop: '6px solid black' }} />
             <div className="h-11"></div>
 
-            <div className="flex gap-20 justify-center items-center">
-                <div className="flex-1 max-w-md p-4 bg-white border rounded">
-                    <p className="text-2xl font-bold">{" "}</p>
-                    <h2 className="text-2xl font-bold">JA INVESTMENTS LLC</h2>
-                    <p className="text-lg">Landlord Address: 100 Charles Street</p>
-                    <p className="mt-2">100 addresses in total</p>
-                    <p className="text-blue-600">64 properties without violations</p>
-                    <p className="text-red-600">37 properties with violations</p>
-                    <p className="text-2xl font-bold"></p>
-                </div>
+            {/* Landlord Boxes */}
+            {landlords.map((landlord, index) => (
+                <div key={index} className="mb-8">
+                    <div className="flex flex-col md:flex-row gap-4 justify-center items-center w-full">
+                        <div className="flex-1 p-4 bg-white border rounded">
+                            <h2 className="text-2xl font-bold">{landlord.OWNER}</h2>
+                            {/* <p className="text-lg">Landlord Address: 100 Charles Street</p>
+                            <p className="mt-2">100 addresses in total</p>
+                            <p className="text-blue-600">64 properties without violations</p>
+                            <p className="text-red-600">37 properties with violations</p> */}
+                            <p className="text-lg">Unit Number: {landlord.UNIT_NUM}</p>
+                            <p className="mt-2">Owned from: {landlord.year} to {landlord.sold}</p>
+                            <p className="text-blue-600">xxxxxx</p>
+                            <p className="text-red-600">xxxxxx</p>
+                        </div>
 
-                <div className="flex-1 max-w-md p-4 rounded">
-                    <h2 className="text-2xl font-bold text-orange-600">DISCLAIMER</h2>
-                    <p>
-                    We can’t be sure that the unit numbers are included in the violation, or that this is the same landlord. At this time we cannot determine which owner owns which address.
-                    </p>
+                        <div className="flex-1 p-4 rounded">
+                            <h2 className="text-2xl font-bold text-orange-600">DISCLAIMER</h2>
+                            <p>{landlord.OWNER} was once a Landlord of {addressObj.FULL_ADDRESS}</p>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            ))}
             <div className="h-11"></div>
+
             
-            {/* <div className="max-w-full overflow-x-auto">
+
+{/*             
+            <div className="max-w-full overflow-x-auto">
                 <div className="text-lg text-white font-semibold py-2 px-4 bg-[#c8a992]">
                     LANDLORD VIOLATIONS
                 </div>
@@ -443,8 +541,8 @@ function DetailPage() {
                     // </div>
                 )}
                 </table>
-            </div>
-            <div className="h-11"></div> */}
+            </div> */}
+            <div className="h-11"></div>
 
             {/* <h1>Detail Page</h1>
             <p>Full Address: {addressObj.FULL_ADDRESS}</p>
