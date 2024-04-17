@@ -17,7 +17,7 @@ interface ILandlord {
     OWNER: string;
     UNIT_NUM: string;
     year: string;
-    sold: string;
+    sold?: string;
 }
 
 function DetailPage() {
@@ -121,10 +121,9 @@ function DetailPage() {
             console.log(ParcelID);
             const res = await fetch(`/api/landlords/by-pid?pid=${ParcelID}`);
             if (res.ok) {
-                const landlordsData = await res.json();
+                const landlordsData: ILandlord[] = await res.json();
                 console.log(landlordsData);
-                // setLandlords(landlordsData);
-                // console.log(landlords);
+
                 const filteredLandlords = landlordsData.filter((a, index, arr) => 
                     !arr.some((b, bIndex) => bIndex !== index && b.OWNER.includes(a.OWNER))
                 );
