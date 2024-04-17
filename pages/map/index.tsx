@@ -3,13 +3,15 @@ import NewMap from '@components/NewMap/NewMap';
 import { useRouter } from 'next/router';
 import { useSearchAPI, IAddress } from '../api/search';
 import { ITopTen } from '@components/types';
+import { GetServerSideProps } from 'next';
 
 
 interface IMapProps {
     topTen: ITopTen[];
 }
 
-const Map: React.FC<IMapProps> = () => {
+const Map: React.FC<IMapProps> = ({topTen}) => {
+    
     const {
         searchAddress,
         addressSuggestions,
@@ -19,36 +21,10 @@ const Map: React.FC<IMapProps> = () => {
         setAddressSuggestions
     } = useSearchAPI();
 
-    const [topTen, setTopTen] = useState<ITopTen[] | null>(null) // null means loading || loading error
     const router = useRouter();
 
     const inputRef = useRef<HTMLInputElement>(null); // reference for searchbox
     const suggestionsRef = useRef<HTMLUListElement>(null); // reference for suggestions
-    useEffect(() => {
-        const fetchLandlords = async () => {
-            try {
-                const res = await fetch(`${base_url}/api/landlords/top-ten`);
-                if (res.ok) {
-                    const topTen: ITopTen[] = await res.json() as ITopTen[];
-                    console.log("len: ", topTen.length)
-                    setTopTen(topTen);
-                    return
-                } else {
-                    console.error('Failed to fetch landlords:', res.statusText);
-                    setTopTen(null)
-                }
-    
-            } catch (err) {
-                console.error(err);
-                setTopTen(null);
-                return
-            }
-        }
-        const fetchData = async () => {
-            fetchLandlords();
-        }
-        fetchData()
-    }, [])
 
 
     useEffect(() => {
@@ -71,8 +47,6 @@ const Map: React.FC<IMapProps> = () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, []);
-
-
 
     const handleAddressSelection = async (address: IAddress) => {
         // setSelectedAddress(address);
@@ -203,7 +177,7 @@ const Map: React.FC<IMapProps> = () => {
                     TOP 10 PROPERTIES BY VIOLATION COUNT
                 </div>
                 <div className="grid grid-cols-1 mb-20 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-x-9 gap-y-16">
-                    {topTen === null ?
+                    {!topTen?
                         "Loading..."
                         :
                         topTen.map((address, index) => (
@@ -229,23 +203,24 @@ const Map: React.FC<IMapProps> = () => {
 // netlify site url will be used if not available then localhost
 const base_url = process.env.SITE_URL || 'http://localhost:3000';
 
-/* getStaticProps takes 1 second */
+export const getServerSideProps: GetServerSideProps = async (context) => {
+    // console.log("getServerSideProps...")
+    const { params, query } = context;
+    try {
+        const res = await fetch(`${base_url}/api/landlords/top-ten`);
+        if (res.ok) {
+            const topTen: ITopTen[] = await res.json();
+            // console.log("successfully fetched topTen", topTen)
+            return { props: { topTen } };
+        }
 
-// export const getStaticProps = async () => {
-//     try {
-//         const res = await fetch(`${base_url}/api/topTen/top-ten`);
-//         if (res.ok) {
-//             const topTen: ITopTen[] = await res.json();
-//             return { props: { topTen } };
-//         }
-
-//         console.error('Failed to fetch topTen:', res.statusText);
-//         return { props: { topTen: [] } };
-//     } catch (err) {
-//         console.error(err);
-//         return { props: { topTen: [] } };
-//     }
-// }
+        console.error('Failed to fetch topTen:', res.statusText, res.status);
+        return { props: { topTen: [] } };
+    } catch (err) {
+        console.error(err);
+        return { props: { topTen: [] } };
+    }
+}
 
 
 export default Map;

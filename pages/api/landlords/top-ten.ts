@@ -47,13 +47,3 @@ const TopTen = async (req: NextApiRequest, res: NextApiResponse) => {
 };
 
 export default TopTen;
-
-type T1 = {
-    a: number,
-    b: number,
-}
-type T2 = {
-    a: number,
-    b: number,
-    c: string
-}
