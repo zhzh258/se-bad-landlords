@@ -17,6 +17,7 @@
     "@prisma/client": "^5.1.1",
     "cypress": "^10.0.3",
     "dotenv": "^16.0.3",
+    "lru-cache": "^10.2.0",
     "mapbox-gl": "^2.13.0",
     "next": "^12.1.5",
     "ogr2ogr": "^4.0.1",

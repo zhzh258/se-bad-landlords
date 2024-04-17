@@ -4,9 +4,21 @@ import { PrismaClient } from '@prisma/client';
 // const prisma = new PrismaClient();
 import prisma from "../../../prisma/prismaClient"
 import { ITopTen, IViolationView } from '@components/types';
+import { LRUCache } from 'lru-cache';
 
+
+const HOURS_TO_EXPIRE = 1; 
+const cache = new LRUCache({
+    max: 500,                   // The maximum size of the cache
+    ttl: 1000 * 60 * 60 * HOURS_TO_EXPIRE // Items expire after HOURS_TO_EXPIRE hours
+  });
 
 const TopTen = async (req: NextApiRequest, res: NextApiResponse) => {
+    const cacheKey = "top-ten"
+    
+    if (cache.has(cacheKey)) {
+        return res.status(200).send(cache.get(cacheKey));
+    }
     try {
         const topTen: ITopTen[] = await prisma.$queryRaw`
             SELECT
@@ -23,8 +35,9 @@ const TopTen = async (req: NextApiRequest, res: NextApiResponse) => {
                 typeof value === 'bigint' ? value.toString() : value
             );
         };
-        
-        res.send(safeJsonStringify(topTen));
+        const stringifiedData = safeJsonStringify(topTen)
+        cache.set(cacheKey, stringifiedData)
+        res.send(stringifiedData);
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Can not fetch the landlords.' });

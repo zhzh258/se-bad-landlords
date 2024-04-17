@@ -4,8 +4,7 @@
 import { IAddress } from '../search';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { PrismaClient } from '@prisma/client';
-
-// const prisma = new PrismaClient();
+import { LRUCache } from 'lru-cache';
 import prisma from "../../../prisma/prismaClient"
 
 
@@ -25,7 +24,19 @@ type RowData = {
     VIOLATION_COUNT:        number
 };
 
+const HOURS_TO_EXPIRE = 1;
+
+const cache = new LRUCache({
+    max: 500,                   // The maximum size of the cache
+    ttl: 1000 * 60 * 60 * HOURS_TO_EXPIRE // Items expire after HOURS_TO_EXPIRE hours
+  });
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+    const cacheKey = "map-points3"
+    
+    if (cache.has(cacheKey)) {
+        return res.status(200).json(cache.get(cacheKey));
+    }
     try {
         // we use raw here because prisma doesn't have DISTINCT ON
         const results: RowData[] = await prisma.$queryRaw`
@@ -93,6 +104,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 },
             })),
         };
+        cache.set(cacheKey, geoJson);
         res.status(200).json(geoJson);
     } catch (error) {
         console.error(error);
