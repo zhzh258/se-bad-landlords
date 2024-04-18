@@ -201,13 +201,21 @@ const Map: React.FC<IMapProps> = ({topTen}) => {
 };
 
 // netlify site url will be used if not available then localhost
-const base_url = process.env.SITE_URL || 'http://localhost:3000';
+// It seems that env.SITE_URL is not set up in netlify environment.
+if(false){
+    const base_url = process.env.SITE_URL || 'http://localhost:3000';
+}
+
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
     // console.log("getServerSideProps...")
     const { params, query } = context;
+    const protocol = context.req.headers['x-forwarded-proto'] || 'http';
+    const host = context.req.headers.host;
+    const url = `${protocol}://${host}/api/landlords/top-ten`
+    // console.log("url", url)
     try {
-        const res = await fetch(`${base_url}/api/landlords/top-ten`);
+        const res = await fetch(url);
         if (res.ok) {
             const topTen: ITopTen[] = await res.json();
             // console.log("successfully fetched topTen", topTen)
