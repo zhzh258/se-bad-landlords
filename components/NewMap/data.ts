@@ -86,10 +86,10 @@ export const violationsData: any = {
 
 export const LOW_VIOLATION = {
   count: 1,
-  color: '#F7F6D0' // yellow
+  color: '#F8E0B9' // yellow
 }
 export const HIGH_VIOLATION = {
-  count: 10,
+  count: 6,
   color: '#FF2E00' // red
 }
 // small dots indicating individual points of the map styles
