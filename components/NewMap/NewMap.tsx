@@ -91,6 +91,7 @@ const NewMap = (
 
   // <Map> onLoad=
   const handleMapLoad = (event: MapEvent<mapboxgl.Map, undefined>) => {
+    setMapHeight(window.innerHeight * 0.7);
     setMapLoading(false)
 
     // set up neighborhood buttons
