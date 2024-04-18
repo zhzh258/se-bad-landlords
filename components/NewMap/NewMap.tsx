@@ -15,12 +15,15 @@ import {
   neighborhoodsData,
   censusData,
   violationsData,
+  LOW_VIOLATION,
+  HIGH_VIOLATION,
 }
 from './data';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { IAddress, ICardPopup, ICoords, IProperties, IViewport, INeighborhoodButton } from '../types'
 import { MapEvent, MapSourceDataEvent, ViewStateChangeEvent } from 'react-map-gl/dist/esm/types';
 import NeighborhoodSelector from '@components/NeighborhoodSelection/NeighborhoodSelection';
+import ColorLegend from "@components/ColorLegend/ColorLegend"
 
 
 const NewMap = (
@@ -364,55 +367,29 @@ const NewMap = (
               />
             </section>
             {/* Current neighborhood name */}
-            
             {hoveredNeighborhoodFeatureName && <section className='absolute top-5 left-1/2 -translate-x-1/2 z-10 bg-white bg-opacity-80 p-2 rounded-lg shadow-md'>
               <p className="text-lg font-lora text-center text-neighborhood-dark-blue">
                 {hoveredNeighborhoodFeatureName}
               </p>
             </section>}
             {/* The neighborhood buttons */}
-            <NeighborhoodSelector
-              neighborhoodButtons={neighborhoodButtons}
-              setViewport={setViewport}
-              mapRef={mapRef}
-              hoveredNeighborhoodFeatureId={hoveredNeighborhoodFeatureId}
-              setHoveredNeighborhoodFeatureId={setHoveredNeighborhoodFeatureId}
-              setHoveredNeighborhoodFeatureName={setHoveredNeighborhoodFeatureName}
-            />
-            {/* <section className="absolute top-5 right-5 z-10 bg-white p-4 rounded-lg shadow-md">
-              <p className="mb-2 mx-4 text-center font-bold font-montserrat text-xl">
-                NEIGHBORHOODS
-              </p>
-              {neighborhoodButtons.map((buttonData, index) => (
-                <div key={index}>
-                  <button
-                    key={index} // Add a unique key prop
-                    onClick={() => {
-                      setViewport({
-                        latitude: buttonData.latitude,
-                        longitude: buttonData.longitude,
-                        zoom: buttonData.zoom
-                      })
-                      if(mapRef?.current){
-                        hoveredNeighborhoodFeatureId && mapRef?.current.setFeatureState(
-                          {source: 'neighborhoods', sourceLayer: 'census2020_bg_neighborhoods-5hyj9i',id: hoveredNeighborhoodFeatureId,}, 
-                          {hover: false,}
-                        );
-                        mapRef?.current.setFeatureState(
-                          {source: 'neighborhoods', sourceLayer: 'census2020_bg_neighborhoods-5hyj9i',id: buttonData.featureId}, 
-                          {hover: true,}
-                        );
-                        setHoveredNeighborhoodFeatureId(buttonData.featureId ?? null)
-                        setHoveredNeighborhoodFeatureName(buttonData.name)
-                      }
-                    }}
-                    className="mb-2 py-1 px-4 bg-white-500 text-neighborhood-dark-blue font-lora rounded shadow-md hover:bg-gray-400 border-0.5 border-neighborhood-dark-blue focus:outline-none focus:ring-1 focus:ring-blue-500 focus:ring-opacity-75"
-                  >
-                    {buttonData.name}}
-                  </button>
-                </div>
-              ))}
-            </section> */}
+            <section className="absolute top-5 right-5 z-10 bg-white p-4 rounded-lg shadow-md">
+              <NeighborhoodSelector
+                neighborhoodButtons={neighborhoodButtons}
+                setViewport={setViewport}
+                mapRef={mapRef}
+                hoveredNeighborhoodFeatureId={hoveredNeighborhoodFeatureId}
+                setHoveredNeighborhoodFeatureId={setHoveredNeighborhoodFeatureId}
+                setHoveredNeighborhoodFeatureName={setHoveredNeighborhoodFeatureName}
+              />
+            </section>
+            {/* The color legend */}
+            <section className="absolute bottom-5 left-5 z-10 bg-white p-4 rounded-lg shadow-md">
+              <ColorLegend
+                lowViolation={LOW_VIOLATION}
+                highViolation={HIGH_VIOLATION}
+              />
+            </section>
             {/* Popup */}
             <section>
             { cardPopup && 

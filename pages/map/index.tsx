@@ -172,7 +172,6 @@ const Map: React.FC<IMapProps> = ({topTen}) => {
                 </div>
                 <NewMap/>
 
-                {/*this shows top 10 landlords using getStaticProps*/}
                 <div className='font-bold text-[#58585B] mt-12 mb-10 text-xl'>
                     TOP 10 PROPERTIES BY VIOLATION COUNT
                 </div>

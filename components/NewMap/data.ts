@@ -83,6 +83,15 @@ export const violationsData: any = {
   url: '/api/geojson/map-points3'
 }
 
+
+export const LOW_VIOLATION = {
+  count: 1,
+  color: '#F7F6D0' // yellow
+}
+export const HIGH_VIOLATION = {
+  count: 10,
+  color: '#FF2E00' // red
+}
 // small dots indicating individual points of the map styles
 export const unclusteredViolationsLayer: any = {
   id: 'unclustered-violations',
@@ -98,8 +107,8 @@ export const unclusteredViolationsLayer: any = {
       'interpolate',
       ['linear'],
       ['to-number', ['get', 'VIOLATION_COUNT']],
-      1, '#FFFFBF',    // Yellow at low VIOLATION_COUNT (e.g., VIOLATION_COUNT = 1)
-      15, '#FF2E00'    // Red at high VIOLATION_COUNT   (e.g., VIOLATION_COUNT = 100)
+      LOW_VIOLATION.count, LOW_VIOLATION.color,    // Yellow at low VIOLATION_COUNT (e.g., VIOLATION_COUNT = 1)
+      HIGH_VIOLATION.count, HIGH_VIOLATION.color    // Red at high VIOLATION_COUNT   (e.g., VIOLATION_COUNT = 100)
     ],
     'circle-radius': 6,
     'circle-stroke-width': 3,

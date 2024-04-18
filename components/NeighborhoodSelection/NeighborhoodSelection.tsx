@@ -29,7 +29,7 @@ function NeighborhoodSelector(
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
   return (
-    <section className="absolute top-5 right-5 z-10 bg-white p-4 rounded-lg shadow-md">
+    <div>
       <p className="mb-2 mx-4 text-center font-bold font-montserrat text-xl">
         NEIGHBORHOODS
       </p>
@@ -72,7 +72,7 @@ function NeighborhoodSelector(
           </button>
         ))}
       </div>
-    </section>
+    </div>
   );
 }
 
