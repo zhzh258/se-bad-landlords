@@ -47,3 +47,11 @@ export interface IViolationView {
 export interface ITopTen extends IViolationView, IAddress {
     FULL_ADDRESS: string; // avoid conflict
 }
+
+export type INeighborhoodButton = {
+    name: string;
+    latitude: number;
+    longitude: number;
+    zoom: number;
+    featureId: string | number | undefined;
+  }

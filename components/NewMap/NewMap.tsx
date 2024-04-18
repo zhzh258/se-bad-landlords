@@ -15,12 +15,12 @@ import {
   neighborhoodsData,
   censusData,
   violationsData,
-  neighborhoods
 }
 from './data';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { IAddress, ICardPopup, ICoords, IProperties, IViewport } from '../types'
+import { IAddress, ICardPopup, ICoords, IProperties, IViewport, INeighborhoodButton } from '../types'
 import { MapEvent, MapSourceDataEvent, ViewStateChangeEvent } from 'react-map-gl/dist/esm/types';
+import NeighborhoodSelector from '@components/NeighborhoodSelection/NeighborhoodSelection';
 
 
 const NewMap = (
@@ -41,6 +41,7 @@ const NewMap = (
     zoom: 11.5
   });// initial state of viewport (somewhere near back bay...)
   const [mapHeight, setMapHeight] = useState<number | null>(null); // sets the map size depending on the height
+  const [neighborhoodButtons, setNeighborhoodButtons] = useState<INeighborhoodButton[]>([])
 
   // init the map height
   useEffect(() => {
@@ -52,11 +53,68 @@ const NewMap = (
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-
+  function calculateFeatureCenter(feature: mapboxgl.MapboxGeoJSONFeature): ICoords{
+    // Some neighborhoods areas are multipolygon, others are polygons. I don't know why they created the map like that.
+    if(feature.geometry.type === "Polygon"){
+      let lnglats = feature.geometry.coordinates[0]
+      const total = lnglats.reduce((acc: Array<number>, val: Array<number>) => {
+        acc[0] += val[0]; // Accumulate longitude
+        acc[1] += val[1]; // Accumulate latitude
+        return acc;
+      }, [0, 0]); // Initial accumulator value
+      const coordinates: ICoords = {
+        longitude: total[0]/lnglats.length,
+        latitude: total[1]/lnglats.length,
+      } 
+      return coordinates;
+    } else if(feature.geometry.type == "MultiPolygon"){
+      let lnglats = feature.geometry.coordinates[0].flat()
+      const total = lnglats.reduce((acc: Array<number>, val: Array<number>) => {
+        acc[0] += val[0]; // Accumulate longitude
+        acc[1] += val[1]; // Accumulate latitude
+        return acc;
+      }, [0, 0]); // Initial accumulator value
+      const coordinates: ICoords = {
+        longitude: total[0]/lnglats.length,
+        latitude: total[1]/lnglats.length,
+      } 
+      return coordinates;
+    } else {
+      throw new Error("Cannot calculate the center of a none-polygon feature!")
+    }
+  }
 
   // <Map> onLoad=
   const handleMapLoad = (event: MapEvent<mapboxgl.Map, undefined>) => {
     setMapLoading(false)
+
+    // set up neighborhood buttons
+    const allNeighborhoodsFeatures: mapboxgl.MapboxGeoJSONFeature[] = event.target.queryRenderedFeatures(undefined, {layers: ["neighborhoods-fills"]});
+
+    const buttons: INeighborhoodButton[] = allNeighborhoodsFeatures.map((feature, index) => {
+      const coordinates = calculateFeatureCenter(feature)
+      let neighborhoodName = "NO_NAME"
+      const id = feature.id
+      try {
+        neighborhoodName = feature.properties?.BlockGr202;
+      } catch(err) {
+        console.error(err)
+      }
+      return {
+        name: neighborhoodName,
+        longitude: coordinates.longitude,
+        latitude: coordinates.latitude,
+        zoom: 14,
+        featureId: id
+      }
+    })
+    buttons.sort((button1, button2) => {
+      if(button1.name < button2.name) return -1;
+      if(button1.name > button2.name) return 1;
+      return 0
+    })
+    setNeighborhoodButtons(buttons)
+    console.log("neighborhoods number in current map: ", buttons.length)
   }
 
 
@@ -104,26 +162,14 @@ const NewMap = (
     }
     { // neighborhood layer
       const selectedFeatures = event.target.queryRenderedFeatures(event.point, {layers: ["neighborhoods-fills"]});
+      if(selectedFeatures.length > 0)
+        console.log("The feature stored in Map is: ", selectedFeatures[0])
       if (selectedFeatures && selectedFeatures.length > 0 && selectedFeatures[0] && viewport.zoom < 13 ) {
         const selectedFeature = selectedFeatures[0];
         console.log(selectedFeature)
         // The data is so weird... Sometimes it's wrapped in an array sometimes it's not.
-        let lnglats = selectedFeature.geometry.coordinates[0]
-        if(typeof lnglats[0][0] !== "number") {
-          lnglats = lnglats[0]
-        } 
-        const total = lnglats.reduce((acc: Array<number>, val: Array<number>) => {
-          acc[0] += val[0]; // Accumulate longitude
-          acc[1] += val[1]; // Accumulate latitude
-          return acc;
-        }, [0, 0]); // Initial accumulator value
-      
-        const coordinates: ICoords = {
-          longitude: total[0]/lnglats.length,
-          latitude: total[1]/lnglats.length,
-        } 
+        const coordinates = calculateFeatureCenter(selectedFeature as mapboxgl.MapboxGeoJSONFeature)
         setViewport({zoom: 14, ...coordinates})
-        console.log("set viewport... ", coordinates.latitude, coordinates.longitude)
         if(selectedFeature.id != hoveredNeighborhoodFeatureId){
           setHoveredNeighborhoodFeatureId(selectedFeature.id);
           // move to a new one
@@ -146,31 +192,7 @@ const NewMap = (
   const handleMapMove = (event: ViewStateChangeEvent<mapboxgl.Map>) => {
     const map: mapboxgl.Map = event.target;
     const nextViewport = event.viewState;
-    setViewport(nextViewport); // update viewport
-    // // check if cards should be displayed
-    // const shouldShowCards = nextViewport.zoom > 15;
-    // setShowCards(shouldShowCards);
-  
-    // // update the map edge
-    // const width = mapContainerRef?.current?.offsetWidth;
-    // const height = mapContainerRef?.current?.offsetHeight;
-
-    // const viewport = new WebMercatorViewport({
-    //   width,
-    //   height,
-    //   latitude: nextViewport.latitude,
-    //   longitude: nextViewport.longitude,
-    //   zoom: nextViewport.zoom
-    // });
-    // const bounds = viewport.getBounds();
-    // const [west, south] = bounds[0];
-    // const [east, north] = bounds[1];
-    // setViewportBounds({
-    //   west: west,
-    //   south: south,
-    //   east: east,
-    //   north: north,
-    // });  
+    setViewport(nextViewport); 
   }
   
   // <Map> onMouseMove = 
@@ -349,36 +371,48 @@ const NewMap = (
               </p>
             </section>}
             {/* The neighborhood buttons */}
-            <section className="absolute top-5 right-5 z-10 bg-white p-4 rounded-lg shadow-md">
-              {/* <p>{mapLoading ? "t": "f"}</p>
-              <p>{mapRef?.current?.isSourceLoaded("violations") ? "yes": "no"}</p> */}
+            <NeighborhoodSelector
+              neighborhoodButtons={neighborhoodButtons}
+              setViewport={setViewport}
+              mapRef={mapRef}
+              hoveredNeighborhoodFeatureId={hoveredNeighborhoodFeatureId}
+              setHoveredNeighborhoodFeatureId={setHoveredNeighborhoodFeatureId}
+              setHoveredNeighborhoodFeatureName={setHoveredNeighborhoodFeatureName}
+            />
+            {/* <section className="absolute top-5 right-5 z-10 bg-white p-4 rounded-lg shadow-md">
               <p className="mb-2 mx-4 text-center font-bold font-montserrat text-xl">
                 NEIGHBORHOODS
               </p>
-              {/* <p>{viewport.longitude}   {viewport.latitude}</p>
-              <p>{selectedCoords.longitude}   {selectedCoords.latitude}</p> */}
-              {neighborhoods.map((neighborhood, index) => (
+              {neighborhoodButtons.map((buttonData, index) => (
                 <div key={index}>
                   <button
                     key={index} // Add a unique key prop
                     onClick={() => {
-                      const { name, ...vp } = neighborhood
-                      setViewport(vp)
-                      if(mapRef?.current && hoveredNeighborhoodFeatureId ){
-                        mapRef?.current.setFeatureState(
+                      setViewport({
+                        latitude: buttonData.latitude,
+                        longitude: buttonData.longitude,
+                        zoom: buttonData.zoom
+                      })
+                      if(mapRef?.current){
+                        hoveredNeighborhoodFeatureId && mapRef?.current.setFeatureState(
                           {source: 'neighborhoods', sourceLayer: 'census2020_bg_neighborhoods-5hyj9i',id: hoveredNeighborhoodFeatureId,}, 
                           {hover: false,}
                         );
-                        setHoveredNeighborhoodFeatureId(null)
+                        mapRef?.current.setFeatureState(
+                          {source: 'neighborhoods', sourceLayer: 'census2020_bg_neighborhoods-5hyj9i',id: buttonData.featureId}, 
+                          {hover: true,}
+                        );
+                        setHoveredNeighborhoodFeatureId(buttonData.featureId ?? null)
+                        setHoveredNeighborhoodFeatureName(buttonData.name)
                       }
                     }}
                     className="mb-2 py-1 px-4 bg-white-500 text-neighborhood-dark-blue font-lora rounded shadow-md hover:bg-gray-400 border-0.5 border-neighborhood-dark-blue focus:outline-none focus:ring-1 focus:ring-blue-500 focus:ring-opacity-75"
                   >
-                    {neighborhood.name} {/* Display the neighborhood name */}
+                    {buttonData.name}}
                   </button>
                 </div>
               ))}
-            </section>
+            </section> */}
             {/* Popup */}
             <section>
             { cardPopup && 
