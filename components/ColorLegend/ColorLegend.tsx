@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type ViolationProps = {
     lowViolation: {
@@ -18,6 +18,10 @@ const ColorLegend: React.FC<ViolationProps> = ({ lowViolation, highViolation }) 
     const [isDragging, setIsDragging] = useState(false);
     const barRef = useRef<HTMLDivElement>(null);
 
+    useEffect(() => {
+        setGlobalSelection(isDragging);
+    }, [isDragging])
+    
     const setGlobalSelection = useCallback((enable: boolean) => {
         const value = enable ? 'none' : '';
         document.body.style.userSelect = value; 
@@ -40,7 +44,6 @@ const ColorLegend: React.FC<ViolationProps> = ({ lowViolation, highViolation }) 
 
     const handleMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
         setIsDragging(true);
-        setGlobalSelection(false)
         if (barRef.current) {
             const rect = barRef.current.getBoundingClientRect();
             updatePositionAndColor(event.clientX - rect.left, rect.width);
@@ -58,13 +61,11 @@ const ColorLegend: React.FC<ViolationProps> = ({ lowViolation, highViolation }) 
 
     const handleMouseUp = () => {
         setIsDragging(false);
-        setGlobalSelection(true)
     };
 
     // todo: allow the drag outside the color scale bar
     const handleMouseLeave = () => {
         setIsDragging(false);
-        setGlobalSelection(true)
     }
     const percentageToColor = (percentage: number, startColor: string, endColor: string) => {
         // Simple linear interpolation between start and end colors in RGBA
@@ -93,11 +94,11 @@ const ColorLegend: React.FC<ViolationProps> = ({ lowViolation, highViolation }) 
                         <div className="w-4 h-4 rounded-full border border-gray-300 bg-white"></div>
                     </div>
                 </div>
-                <span>{highViolation.count}</span>
+                <span>{highViolation.count}+</span>
             </div>
             <div className="mt-1 flex justify-right items-center">
                 <div className="w-6 h-6 rounded-full mx-2" style={{ backgroundColor: color }}></div>
-                <div className="text-sm" style={{color: color}}>{index}</div>
+                <div className="text-sm" style={{color: color}}>{index === highViolation.count ? index + "+" : index}</div>
             </div>
         </div>
     );
