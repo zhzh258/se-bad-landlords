@@ -24,6 +24,7 @@ import { IAddress, ICardPopup, ICoords, IProperties, IViewport, INeighborhoodBut
 import { MapEvent, MapSourceDataEvent, ViewStateChangeEvent } from 'react-map-gl/dist/esm/types';
 import NeighborhoodSelector from '@components/NeighborhoodSelection/NeighborhoodSelection';
 import ColorLegend from "@components/ColorLegend/ColorLegend"
+import { set } from 'cypress/types/lodash';
 
 
 const NewMap = (
@@ -45,6 +46,7 @@ const NewMap = (
   });// initial state of viewport (somewhere near back bay...)
   const [mapHeight, setMapHeight] = useState<number | null>(null); // sets the map size depending on the height
   const [neighborhoodButtons, setNeighborhoodButtons] = useState<INeighborhoodButton[]>([])
+
 
   // init the map height
   useEffect(() => {
@@ -111,13 +113,27 @@ const NewMap = (
         featureId: id
       }
     })
-    buttons.sort((button1, button2) => {
+    const seen = new Set<string | number>();
+    const uniqueButtons = buttons.filter((button, index) => {
+      if(button.featureId){
+        if(seen.has(button.featureId)){
+          return false;
+        } else {
+          seen.add(button.featureId);
+          return true;
+        }
+      } else {
+        return false;
+      }
+    })
+    uniqueButtons.sort((button1, button2) => {
       if(button1.name < button2.name) return -1;
       if(button1.name > button2.name) return 1;
       return 0
     })
-    setNeighborhoodButtons(buttons)
-    console.log("neighborhoods number in current map: ", buttons.length)
+
+    setNeighborhoodButtons(uniqueButtons)
+    console.log("neighborhoods number in current map: ", uniqueButtons.length)
   }
 
 
