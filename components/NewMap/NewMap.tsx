@@ -373,7 +373,7 @@ const NewMap = (
               </p>
             </section>}
             {/* The neighborhood buttons */}
-            <section className="absolute top-5 right-5 z-10 bg-white p-4 rounded-lg shadow-md">
+            <section className="absolute top-5 right-5 z-10 bg-white p-4 rounded-lg shadow-md w-1/5">
               <NeighborhoodSelector
                 neighborhoodButtons={neighborhoodButtons}
                 setViewport={setViewport}
@@ -384,7 +384,7 @@ const NewMap = (
               />
             </section>
             {/* The color legend */}
-            <section className="absolute bottom-5 left-5 z-10 bg-white p-4 rounded-lg shadow-md">
+            <section className="absolute bottom-5 left-5 z-10 bg-white p-4 rounded-lg shadow-md w-1/6">
               <ColorLegend
                 lowViolation={LOW_VIOLATION}
                 highViolation={HIGH_VIOLATION}

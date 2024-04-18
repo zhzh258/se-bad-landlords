@@ -78,7 +78,7 @@ const ColorLegend: React.FC<ViolationProps> = ({ lowViolation, highViolation }) 
 
     return (
         <div>
-            <h3 className="font-semibold mb-2">Violations</h3>
+            <h3 className="text-base font-semibold mb-2">Violations</h3>
             <div className="flex justify-between text-sm mt-1">
                 <span>{lowViolation.count}</span>
                 <div
@@ -95,9 +95,9 @@ const ColorLegend: React.FC<ViolationProps> = ({ lowViolation, highViolation }) 
                 </div>
                 <span>{highViolation.count}</span>
             </div>
-            <div className="mt-2 flex justify-between">
-                <div className="w-6 h-6 rounded-full" style={{ backgroundColor: color }}></div>
-                <div>{index}</div>
+            <div className="mt-1 flex justify-right items-center">
+                <div className="w-6 h-6 rounded-full mx-2" style={{ backgroundColor: color }}></div>
+                <div className="text-sm" style={{color: color}}>{index}</div>
             </div>
         </div>
     );
