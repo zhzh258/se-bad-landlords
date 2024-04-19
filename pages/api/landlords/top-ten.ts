@@ -4,14 +4,7 @@ import { PrismaClient } from '@prisma/client';
 // const prisma = new PrismaClient();
 import prisma from "../../../prisma/prismaClient"
 import { ITopTen, IViolationView } from '@components/types';
-import { LRUCache } from 'lru-cache';
-
-
-const HOURS_TO_EXPIRE = 1; 
-const cache = new LRUCache({
-    max: 500,                   // The maximum size of the cache
-    ttl: 1000 * 60 * 60 * HOURS_TO_EXPIRE // Items expire after HOURS_TO_EXPIRE hours
-  });
+import cache from './cache';
 
 const TopTen = async (req: NextApiRequest, res: NextApiResponse) => {
     const cacheKey = "top-ten"
@@ -29,6 +22,8 @@ const TopTen = async (req: NextApiRequest, res: NextApiResponse) => {
                 violations_view ON sam."FULL_ADDRESS" = violations_view."FULL_ADDRESS"
             order by
                 violations_view."violations_count" DESC
+            LIMIT
+                10;
         `
         const safeJsonStringify = (data: ITopTen[]) => {
             return JSON.stringify(data, (key, value) =>

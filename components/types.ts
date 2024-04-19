@@ -48,10 +48,16 @@ export interface ITopTen extends IViolationView, IAddress {
     FULL_ADDRESS: string; // avoid conflict
 }
 
-export type INeighborhoodButton = {
+export interface INeighborhoodButton {
     name: string;
     latitude: number;
     longitude: number;
     zoom: number;
     featureId: string | number | undefined;
   }
+
+export interface ILandlord {
+    city: string,
+    name: string,
+    violations: number
+}

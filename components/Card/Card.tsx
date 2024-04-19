@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import { IAddress } from '@pages/api/search';
+import { IAddress } from '@pages/api/property/search';
 import { IProperties } from '@components/types';
 
 // type IProperties = {

@@ -2,7 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 // const prisma = new PrismaClient();
-import prisma from "../../prisma/prismaClient"
+import prisma from "../../../prisma/prismaClient"
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -10,9 +10,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const addresses = await prisma.sam.findMany({
       where: {
-        FULL_ADDRESS: { contains: searchAddress, mode: 'insensitive' }, // this allows slower case values
+        FULL_ADDRESS: { equals: searchAddress }, 
       },
-     take: 10,
     });
 
     res.status(200).json(addresses);

@@ -35,7 +35,7 @@ export const useSearchAPI = () => {
     // call /api/searchAddress with address parameter as input
     const fetchAddressSuggestions = async (searchAddress: string) => {
         try {
-            const res = await fetch(`/api/addresses?search=${searchAddress}`);
+            const res = await fetch(`/api/property/addresses?search=${searchAddress}`);
             if (res.ok) {
                 const suggestions = await res.json();
                 setAddressSuggestions(suggestions);

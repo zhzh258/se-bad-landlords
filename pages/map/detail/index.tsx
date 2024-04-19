@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 import { useEffect, useState, useRef } from 'react';
-import { useSearchAPI, IAddress } from '../../api/search';
+import { useSearchAPI, IAddress } from '../../api/property/search';
 
 interface IViolation {
     code: string;
@@ -13,7 +13,7 @@ interface IViolation {
     case_no: string;
 }
 
-interface ILandlord {
+interface IOwner {
     OWNER: string;
     UNIT_NUM: string;
     year: string;
@@ -25,7 +25,7 @@ function DetailPage() {
     const [addressObj, setAddressObj] = useState<IAddress | null>(null);
     const [violations, setViolations] = useState<IViolation[]>([]);
     const [units, setUnits] = useState<IAddress[]>([]); 
-    const [landlords, setLandlords] = useState<ILandlord[]>([]); 
+    const [landlords, setLandlords] = useState<IOwner[]>([]); 
     const [expandTableVisible_st, setexpandTableVisible_st] = useState(false);
     const [expandTableVisible_un, setexpandTableVisible_un] = useState(false);
     const [expandTableVisible_la, setexpandTableVisible_la] = useState(false);
@@ -45,7 +45,7 @@ function DetailPage() {
     const handleAddressSelection = async (address: IAddress) => {
         // setSelectedAddress(address);
         console.log(address.FULL_ADDRESS)
-        const res = (await fetch(`/api/address?search=${address.FULL_ADDRESS}`));
+        const res = (await fetch(`/api/property/address?search=${address.FULL_ADDRESS}`));
         if (!res.ok) {
             // throw new Error('Network response was not ok.');
             const addressString = JSON.stringify(address);
@@ -88,7 +88,7 @@ function DetailPage() {
 
     const fetchViolations = async (sam_id: string) => {
         try {
-            const res = await fetch(`/api/violations?sam_id=${sam_id}`);
+            const res = await fetch(`/api/property/violations?sam_id=${sam_id}`);
             if (!res.ok) {
                 throw new Error('Network response was not ok.');
             }
@@ -103,7 +103,7 @@ function DetailPage() {
 
     const fetchAssociatedUnits = async (generalAddress: string) => {
         try {
-            const res = await fetch(`/api/addresses?search=${generalAddress}`);
+            const res = await fetch(`/api/property/addresses?search=${generalAddress}`);
             if (res.ok) {
                 const unitsData = await res.json();
                 setUnits(unitsData);
@@ -121,7 +121,7 @@ function DetailPage() {
             console.log(ParcelID);
             const res = await fetch(`/api/landlords/by-pid?pid=${ParcelID}`);
             if (res.ok) {
-                const landlordsData: ILandlord[] = await res.json();
+                const landlordsData: IOwner[] = await res.json();
                 console.log(landlordsData);
 
                 const filteredLandlords = landlordsData.filter((a, index, arr) => 

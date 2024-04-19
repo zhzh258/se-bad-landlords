@@ -1,12 +1,9 @@
 // map-points3 api is similar to map-points2
 // But it fetch more data
 
-import { IAddress } from '../search';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { PrismaClient } from '@prisma/client';
-import { LRUCache } from 'lru-cache';
 import prisma from "../../../prisma/prismaClient"
-
+import cache from '../landlords/cache';
 
 type RowData = {
     // below is columns from prisma.bpv
@@ -24,12 +21,6 @@ type RowData = {
     VIOLATION_COUNT:        number
 };
 
-const HOURS_TO_EXPIRE = 1;
-
-const cache = new LRUCache({
-    max: 500,                   // The maximum size of the cache
-    ttl: 1000 * 60 * 60 * HOURS_TO_EXPIRE // Items expire after HOURS_TO_EXPIRE hours
-  });
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     const cacheKey = "map-points3"

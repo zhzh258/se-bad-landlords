@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import NewMap from '@components/NewMap/NewMap';
 import { useRouter } from 'next/router';
-import { useSearchAPI, IAddress } from '../api/search';
+import { useSearchAPI, IAddress } from '../api/property/search';
 import { ITopTen } from '@components/types';
 import { GetServerSideProps } from 'next';
 

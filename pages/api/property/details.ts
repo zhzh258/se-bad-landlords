@@ -4,14 +4,18 @@ import { PrismaClient } from '@prisma/client';
 
 // const prisma = new PrismaClient();
 import prisma from "../../../prisma/prismaClient"
+import { NextApiRequest, NextApiResponse } from 'next';
 
-export default async function handler(req, res) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const sam_id = req.query.sam_id;
-
-    if (!sam_id) {
+      
+    if (!req.query.sam_id) {
         return res.status(400).json({ error: 'SAM_ID is required.' });
     }
+    if (Array.isArray(req.query.sam_id)) {
+        return res.status(400).json({ error: 'SAM_ID is required.' });
+    }
+    const sam_id: string | undefined = req.query.sam_id;
 
     const samData = await prisma.sam.findFirst({
         where: {
@@ -31,7 +35,7 @@ export default async function handler(req, res) {
   
     const propertyData = await prisma.property.findFirst({
         where: {
-            PID: samData.PARCEL,
+            PID: samData.PARCEL ?? undefined,
         },
         select: {
             OWNER: true
